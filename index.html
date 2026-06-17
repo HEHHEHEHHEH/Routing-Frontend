@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Routing Template | Pioneer Adhesives Inc.</title>
+
+  <!-- ============================================
+       STYLESHEETS - Modular CSS Architecture
+       ============================================ -->
+  <link rel="stylesheet" href="css/main.css">
+
+  <!--
+    CSS Module Hierarchy:
+    main.css
+    ├── base.css       - CSS variables, resets, utilities
+    ├── layout.css     - Grid, flexbox, structural layouts
+    └── components.css - Tables, buttons, forms, tabs
+  -->
+</head>
+<body>
+
+  <!-- ============================================
+       MAIN CONTAINER
+       ============================================ -->
+  <div class="container">
+
+    <!-- Header -->
+    <header class="header">
+      <div>
+        <h1 class="header-title">PIONEER ADHESIVES INC.</h1>
+        <h2 class="header-subtitle">ROUTING TEMPLATE SYSTEM</h2>
+      </div>
+    </header>
+
+    <!-- ============================================
+         NAVIGATION TABS (5 Main Views)
+         ============================================ -->
+    <nav class="nav-tabs">
+      <button id="tab-add"
+              onclick="switchTab('ADD')"
+              class="nav-tab nav-tab--active">
+        Add New Routing
+      </button>
+      <button id="tab-lookup"
+              onclick="switchTab('LOOKUP')"
+              class="nav-tab nav-tab--inactive">
+        Look Up Routing
+      </button>
+      <button id="tab-update"
+              onclick="switchTab('UPDATE')"
+              class="nav-tab nav-tab--inactive">
+        Update Routing
+      </button>
+      <button id="tab-manage"
+              onclick="switchTab('MANAGE')"
+              class="nav-tab nav-tab--inactive">
+        Manage Line Activities
+      </button>
+      <button id="tab-alldata"
+              onclick="switchTab('ALLDATA')"
+              class="nav-tab nav-tab--inactive">
+        View All Data
+      </button>
+    </nav>
+
+    <!-- ============================================
+         VIEW 1-3: ROUTING FORM (ADD / LOOKUP / UPDATE)
+         Shared form component used by 3 modes
+         ============================================ -->
+    <div id="view-routing">
+
+      <!-- Search Bar (LOOKUP & UPDATE modes only) -->
+      <div id="search-section" class="search-section hidden">
+        <div class="search-field">
+          <label for="searchInput">Search Database (e.g., 1AF2202L, 1KPH5A5J01)</label>
+          <div class="search-input-group">
+            <input type="text"
+                   id="searchInput"
+                   class="search-input"
+                   placeholder="Enter Item Code (e.g., 1AF2202L)"
+                   onkeypress="handleSearchKeypress(event)">
+            <button onclick="performSearch()" class="search-btn">Search</button>
+          </div>
+        </div>
+        <div id="search-status" class="search-status"></div>
+      </div>
+
+      <!-- Mode Selector & Instructions -->
+      <div class="mode-selector">
+        <div class="mode-instructions">
+          <h3>INSTRUCTIONS:</h3>
+          <ul>
+            <li><span class="badge-highlight">YELLOW CELLS ONLY</span> - Fill in cells highlighted in YELLOW.</li>
+            <li><strong>DROPDOWN FIRST:</strong> Select the Production Line first.</li>
+          </ul>
+        </div>
+
+        <div class="mode-toggle">
+          <span class="font-semibold text-gray-700">Template Mode:</span>
+          <div class="mode-buttons">
+            <button id="btn-fg"
+                    onclick="setMode('FG')"
+                    class="mode-btn mode-btn--active">
+              FG (Finished Goods)
+            </button>
+            <button id="btn-bm"
+                    onclick="setMode('BM')"
+                    class="mode-btn">
+              BM (Bulk Material)
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top Form Section -->
+      <div class="form-grid">
+        <div class="space-y-3">
+          <div class="form-group">
+            <label for="itemCode">ITEM CODE</label>
+            <input type="text"
+                   id="itemCode"
+                   class="bg-excel-yellow"
+                   placeholder="Enter Item Code">
+          </div>
+          <div class="form-group">
+            <label for="skuDesc">SKU Description</label>
+            <input type="text"
+                   id="skuDesc"
+                   class="bg-excel-yellow"
+                   placeholder="Enter SKU Description">
+          </div>
+          <div class="form-group" style="margin-top:1.5rem;">
+            <label id="qtyLabel" for="qtyInput">FG Qty/Unit</label>
+            <input type="number"
+                   id="qtyInput"
+                   class="bg-excel-yellow"
+                   value="1"
+                   oninput="calculateAll()">
+          </div>
+        </div>
+
+        <div class="space-y-3">
+          <div class="form-group">
+            <label for="prodLine">Production Line</label>
+            <select id="prodLine"
+                    class="bg-excel-yellow"
+                    onchange="updateLineDescription()">
+              <option value="" disabled selected>-- Select Production Line --</option>
+              <!-- Populated by main.js -->
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="lineDesc" class="text-gray-500">Line Description</label>
+            <input type="text"
+                   id="lineDesc"
+                   readonly
+                   class="bg-gray-50 text-gray-600">
+          </div>
+        </div>
+      </div>
+
+      <!-- Routing Table -->
+      <div class="table-container">
+        <table class="excel-table" id="routingTable">
+          <thead>
+            <tr>
+              <th colspan="7" class="section-header--routing">ROUTING DETAILS</th>
+              <th colspan="5" class="section-header--bom">ACUMATICA BOM</th>
+              <th rowspan="2" class="action-column"></th>
+            </tr>
+            <tr>
+              <th class="w-activity">Activities</th>
+              <th class="w-pax">Pax</th>
+              <th class="w-machine">Machine</th>
+              <th class="w-time">Time (min)</th>
+              <th class="w-runtime">Run Time</th>
+              <th class="w-unit">Unit</th>
+              <th class="w-labor">Total Labor min</th>
+              <th class="w-mc">Total MC min</th>
+              <th class="w-bom-activity">ACTIVITIES</th>
+              <th class="w-dl-units">DL<br>(UNITS/1 MIN)</th>
+              <th class="w-dl">DL</th>
+              <th class="w-voh">VOH</th>
+              <th class="w-foh">FOH</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <!-- Rows generated by routing-form.js -->
+          </tbody>
+          <tfoot>
+            <tr>
+              <td class="text-right pr-4">TOTAL</td>
+              <td id="sumPax">0</td>
+              <td id="sumMachine">0</td>
+              <td id="sumTime">0.00000</td>
+              <td id="sumRunTime">0.00000</td>
+              <td></td>
+              <td id="sumLaborMin">0.00000</td>
+              <td id="sumMcMin" class="w-mc">0.00000</td>
+              <td class="cell-bom"></td>
+              <td class="cell-bom"></td>
+              <td id="sumDL" class="cell-bom">0.00000</td>
+              <td id="sumVOH" class="cell-bom">0.00000</td>
+              <td id="sumFOH" class="cell-bom">0.00000</td>
+              <td class="action-column"></td>
+            </tr>
+          </tfoot>
+        </table>
+
+        <button id="btn-add-row"
+                onclick="addRow()"
+                class="btn btn--primary btn--add-row">
+          + Add Activity Row
+        </button>
+      </div>
+
+      <!-- Save Button -->
+      <div id="save-section" class="save-section">
+        <button onclick="saveRoutingDocument()" class="btn btn--success">
+          Save Routing Document
+        </button>
+      </div>
+    </div>
+
+    <!-- ============================================
+         VIEW 4: MANAGE LINE ACTIVITIES
+         Activity CRUD for each production line
+         ============================================ -->
+    <div id="view-manage" class="hidden">
+      <h3 style="font-size:1.25rem;font-weight:700;color:var(--gray-800);margin-bottom:1.5rem;">
+        Line Activity Database
+      </h3>
+
+      <div class="manage-grid">
+        <!-- Sidebar: Line Selection -->
+        <div class="manage-sidebar">
+          <label for="manageLineSelect" class="block font-semibold mb-2">
+            Select Production Line to Edit:
+          </label>
+          <select id="manageLineSelect"
+                  class="w-full border border-gray-300 rounded px-3 py-2 bg-white"
+                  onchange="renderManageActivities()">
+            <option value="" disabled selected>-- Choose Line --</option>
+          </select>
+          <div id="manageLineDesc" class="line-description"></div>
+        </div>
+
+        <!-- Content: Activity List -->
+        <div class="manage-content">
+          <div id="activityEditorSection" class="hidden">
+            <label class="block font-semibold mb-2">Activities for this Line:</label>
+
+            <div class="activity-list">
+              <ul id="manageActivityList">
+                <!-- Populated by manage-activities.js -->
+              </ul>
+              <div id="emptyActivitiesMsg" class="activity-empty-msg hidden">
+                No activities found for this line.
+              </div>
+            </div>
+
+            <div style="display:flex;gap:0.5rem;">
+              <input type="text"
+                     id="newActivityInput"
+                     class="border border-gray-300 rounded px-3 py-2 flex-1"
+                     placeholder="Enter new activity name..."
+                     onkeypress="handleActivityKeypress(event)">
+              <button onclick="addActivityToLine()" class="btn btn--dark">
+                Add Activity
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================
+         VIEW 5: VIEW ALL DATA
+         Paginated table of all routing records
+         ============================================ -->
+    <div id="view-alldata" class="hidden">
+      <h3 style="font-size:1.25rem;font-weight:700;color:var(--gray-800);margin-bottom:1.5rem;">
+        All Routing Records Database
+      </h3>
+
+      <div class="data-table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Item Code</th>
+              <th>SKU Description</th>
+              <th>Line</th>
+              <th>Type</th>
+              <th class="text-center">Action</th>
+            </tr>
+          </thead>
+          <tbody id="allDataTableBody">
+            <!-- Populated by all-data.js -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination">
+        <span class="pagination-info" id="pagination-info">
+          Showing 0 to 0 of 0 entries
+        </span>
+        <div class="pagination-buttons">
+          <button onclick="changePage(-1)"
+                  id="btn-prev-page"
+                  class="btn btn--secondary">
+            Previous
+          </button>
+          <button onclick="changePage(1)"
+                  id="btn-next-page"
+                  class="btn btn--secondary">
+            Next
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ============================================
+       JAVASCRIPT - Modular Architecture
+       ============================================ -->
+
+  <!-- Layer 1: State & Data -->
+  <script src="js/modules/state.js"></script>
+  <script src="js/modules/mock-db.js"></script>
+
+  <!-- Layer 2: Utilities -->
+  <script src="js/modules/utils.js"></script>
+
+  <!-- Layer 3: Core Logic -->
+  <script src="js/modules/calculations.js"></script>
+  <script src="js/modules/view-controller.js"></script>
+
+  <!-- Layer 4: Feature Modules -->
+  <script src="js/modules/routing-form.js"></script>
+  <script src="js/modules/search.js"></script>
+  <script src="js/modules/manage-activities.js"></script>
+  <script src="js/modules/all-data.js"></script>
+
+  <!-- Layer 5: Router & Entry Point -->
+  <script src="js/modules/tabs.js"></script>
+  <script src="js/main.js"></script>
+
+  <!--
+    JS Module Hierarchy:
+    main.js
+    ├── modules/state.js              - App state, constants, enums
+    ├── modules/mock-db.js            - In-memory data store
+    ├── modules/utils.js              - Helper functions
+    ├── modules/calculations.js       - Math engine
+    ├── modules/view-controller.js    - View state manager
+    ├── modules/routing-form.js       - Form handling
+    ├── modules/search.js             - Search engine
+    ├── modules/manage-activities.js  - Activity CRUD
+    ├── modules/all-data.js           - Paginated table view
+    └── modules/tabs.js               - Tab controller/router
+  -->
+
+</body>
+</html>

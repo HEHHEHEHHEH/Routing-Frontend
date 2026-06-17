@@ -1,0 +1,171 @@
+/* ============================================
+   MOCK-DB.JS - In-Memory Data Store
+   Pioneer Adhesives Routing Template System
+   
+   Simulates a backend database for development
+   and testing. Replace with real API calls.
+   ============================================ */
+
+/**
+ * Mock database for line standard activities
+ * Maps production line codes to arrays of activity names
+ * @type {Object.<string, string[]>}
+ */
+const lineActivitiesDB = {
+  'L01': [
+    'UNBOXING',
+    'LABELING',
+    'BOX PREPARATION'
+  ],
+  'L11': [
+    'UNBOXING',
+    'BATCH CODING',
+    'PLACING OF CODED PAIL STICKER LABEL',
+    'REBOXING'
+  ]
+};
+
+/**
+ * Mock routing database
+ * Maps inventory IDs to routing records
+ * @type {Object.<string, Object>}
+ */
+const mockRoutingDB = {
+  '1AF2202L': {
+    inventory_id: '1AF2202L',
+    revision_descr: 'PG ANTI FOULING PAINT RED 4L',
+    revision: '03',
+    notes: 'CRN RD23-CR055',
+    production_line: 'L01 - L1 COATINGS',
+    production_line_code: 'L01',
+    activities: [
+      { type: 'Labor', item_id: 'L01 LABELING/CODING', activities: 'L01 LABELING/CODING', class: 'DL', pax: 1, machine: 1, time_min: 0.1245 },
+      { type: 'Labor', item_id: 'L01 FILLING', activities: 'L01 FILLING', class: 'DL', pax: 2, machine: 1, time_min: 0.1499 }
+    ],
+    product_type: 'Finished Good (FG)'
+  },
+  '1KPH5A5J01': {
+    inventory_id: '1KPH5A5J01',
+    revision_descr: 'FG_KOPHENOL HIGHWAY YELLOW',
+    revision: '00',
+    notes: 'PACKAGING MATERIAL: REUSE THE TIN PAIL OF KOPHENOL CREAM',
+    production_line: 'L01 - L1 COATINGS',
+    production_line_code: 'L01',
+    activities: [
+      { type: 'Labor', item_id: 'L01 LABELING/CODING', activities: 'L01 LABELING/CODING', class: 'DL', pax: 1, machine: 1, time_min: 0.1167 }
+    ],
+    product_type: 'Finished Good (FG)'
+  },
+  '1WDG5A6601': {
+    inventory_id: '1WDG5A6601',
+    revision_descr: 'COMM_PIONEER WOODGLUE D3 4KG',
+    qty: 4,
+    production_line_code: 'L11',
+    activities: [
+      { activities: 'UNBOXING', pax: 1, machine: 0, time_min: 0.1333 },
+      { activities: 'BATCH CODING', pax: 1, machine: 0, time_min: 0.0333 },
+      { activities: 'PLACING OF CODED PAIL STICKER LABEL', pax: 1, machine: 0, time_min: 0.1666 },
+      { activities: 'REBOXING', pax: 1, machine: 0, time_min: 0.1000 }
+    ],
+    product_type: 'Finished Good (FG)'
+  }
+};
+
+/**
+ * Seed mock database with dummy data for pagination testing
+ * @param {number} count - Number of dummy records to generate
+ */
+function seedMockData(count = 25) {
+  for (let i = 1; i <= count; i++) {
+    const code = 'DUMMY-' + String(i).padStart(3, '0');
+    mockRoutingDB[code] = {
+      inventory_id: code,
+      revision_descr: 'Dummy Product ' + i,
+      production_line_code: 'L0' + ((i % 9) + 1),
+      product_type: i % 3 === 0 ? 'Base Material (BM)' : 'Finished Good (FG)',
+      activities: []
+    };
+  }
+}
+
+/**
+ * Get a single routing record by item code
+ * @param {string} itemCode - The inventory ID to look up
+ * @returns {Object|null} The routing record or null
+ */
+function getRoutingRecord(itemCode) {
+  return mockRoutingDB[itemCode.toUpperCase()] || null;
+}
+
+/**
+ * Get all routing records as an array
+ * @returns {Object[]}
+ */
+function getAllRoutingRecords() {
+  return Object.values(mockRoutingDB);
+}
+
+/**
+ * Save or update a routing record
+ * @param {string} itemCode
+ * @param {Object} data
+ */
+function saveRoutingRecord(itemCode, data) {
+  mockRoutingDB[itemCode.toUpperCase()] = data;
+}
+
+/**
+ * Get activities for a production line
+ * @param {string} lineCode
+ * @returns {string[]}
+ */
+function getLineActivities(lineCode) {
+  return lineActivitiesDB[lineCode] || [];
+}
+
+/**
+ * Add activity to a production line
+ * @param {string} lineCode
+ * @param {string} activity
+ */
+function addLineActivity(lineCode, activity) {
+  if (!lineActivitiesDB[lineCode]) {
+    lineActivitiesDB[lineCode] = [];
+  }
+  lineActivitiesDB[lineCode].push(activity.toUpperCase());
+}
+
+/**
+ * Remove activity from a production line
+ * @param {string} lineCode
+ * @param {number} index
+ */
+function removeLineActivity(lineCode, index) {
+  if (lineActivitiesDB[lineCode]) {
+    lineActivitiesDB[lineCode].splice(index, 1);
+  }
+}
+
+/**
+ * Update activity name for a production line
+ * @param {string} lineCode
+ * @param {number} index
+ * @param {string} newValue
+ */
+function updateLineActivity(lineCode, index, newValue) {
+  if (lineActivitiesDB[lineCode]) {
+    lineActivitiesDB[lineCode][index] = newValue.trim().toUpperCase();
+  }
+}
+
+// Expose to window
+window.lineActivitiesDB = lineActivitiesDB;
+window.mockRoutingDB = mockRoutingDB;
+window.seedMockData = seedMockData;
+window.getRoutingRecord = getRoutingRecord;
+window.getAllRoutingRecords = getAllRoutingRecords;
+window.saveRoutingRecord = saveRoutingRecord;
+window.getLineActivities = getLineActivities;
+window.addLineActivity = addLineActivity;
+window.removeLineActivity = removeLineActivity;
+window.updateLineActivity = updateLineActivity;
