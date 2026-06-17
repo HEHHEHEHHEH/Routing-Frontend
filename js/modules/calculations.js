@@ -16,6 +16,91 @@ const CALC_CONSTANTS = {
 };
 
 /**
+ * Safely evaluate a formula expression
+ * Only supports basic arithmetic: +, -, *, /, parentheses
+ * Must start with '=' to be treated as a formula
+ * @param {string} input - The formula string (e.g., "=80/20+30-6")
+ * @returns {number} The computed result, or 0 if invalid
+ */
+function evaluateFormula(input) {
+  if (input === null || input === undefined) {
+    return 0;
+  }
+
+  var s = String(input).trim();
+
+  // Not a formula - try plain number
+  if (!s.startsWith('=')) {
+    var parsed = parseFloat(s);
+    return isNaN(parsed) ? 0 : parsed;
+  }
+
+  // Formula mode - remove '=' prefix
+  var expr = s.slice(1);
+
+  // Security validation: only allow digits, decimal points, operators, parentheses, whitespace
+  if (!/^[0-9+\-*/().\s]+$/.test(expr)) {
+    return 0;
+  }
+
+  try {
+    var result = new Function('return (' + expr + ')')();
+    if (result === null || result === undefined || typeof result !== 'number') {
+      return 0;
+    }
+    if (isNaN(result) || !isFinite(result)) {
+      return 0;
+    }
+    return result;
+  } catch (e) {
+    return 0;
+  }
+}
+
+/**
+ * Handle blur event on Time input: evaluate formula and show result
+ * @param {HTMLInputElement} input
+ */
+function evaluateTimeFormula(input) {
+  var rawValue = input.value;
+  var result = evaluateFormula(rawValue);
+
+  // Store the original formula/expression for re-editing
+  if (rawValue.trim().startsWith('=')) {
+    input.setAttribute('data-formula', rawValue.trim());
+  } else {
+    input.removeAttribute('data-formula');
+  }
+
+  // Display the result
+  input.value = result;
+  calculateAll();
+}
+
+/**
+ * Handle focus event on Time input: restore formula for editing
+ * @param {HTMLInputElement} input
+ */
+function restoreTimeFormula(input) {
+  var formula = input.getAttribute('data-formula');
+  if (formula) {
+    input.value = formula;
+  }
+}
+
+/**
+ * Handle keydown on Time input: evaluate on Enter key
+ * @param {KeyboardEvent} event
+ * @param {HTMLInputElement} input
+ */
+function handleTimeKeydown(event, input) {
+  if (event.key === 'Enter') {
+    event.preventDefault();
+    input.blur();
+  }
+}
+
+/**
  * Calculate all derived values for a single row
  * @param {number} pax - Number of workers
  * @param {number} machine - Number of machines
@@ -24,33 +109,33 @@ const CALC_CONSTANTS = {
  * @returns {Object} Calculated values
  */
 function calculateRow(pax, machine, time, qty) {
-  const safeQty = Math.max(qty, 0);
-  const safePax = Math.max(pax, 0);
-  const safeMachine = Math.max(machine, 0);
-  const safeTime = Math.max(time, 0);
+  var safeQty = Math.max(qty, 0);
+  var safePax = Math.max(pax, 0);
+  var safeMachine = Math.max(machine, 0);
+  var safeTime = Math.max(time, 0);
 
-  const runTime = safeQty !== 0 ? (safeTime / safeQty) : 0;
-  const laborMin = safePax * safeTime;
-  const mcMin = safeMachine * safeTime;
+  var runTime = safeQty !== 0 ? (safeTime / safeQty) : 0;
+  var laborMin = safePax * safeTime;
+  var mcMin = safeMachine * safeTime;
 
-  let dlUnits = 0;
+  var dlUnits = 0;
   if (safeTime > 0) {
     dlUnits = safeQty / safeTime;
   }
 
   // DL, VOH, FOH all equal runTime per business logic
-  const dl = runTime;
-  const voh = runTime;
-  const foh = runTime;
+  var dl = runTime;
+  var voh = runTime;
+  var foh = runTime;
 
   return {
-    runTime,
-    laborMin,
-    mcMin,
+    runTime: runTime,
+    laborMin: laborMin,
+    mcMin: mcMin,
     dlUnits: dlUnits > 0 ? Math.round(dlUnits) : 0,
-    dl,
-    voh,
-    foh
+    dl: dl,
+    voh: voh,
+    foh: foh
   };
 }
 
@@ -59,40 +144,40 @@ function calculateRow(pax, machine, time, qty) {
  * Reads input values directly from DOM, writes computed values back
  */
 function calculateAll() {
-  const qtyInput = document.getElementById('qtyInput');
-  const qty = parseFloat(qtyInput?.value) || 0;
+  var qtyInput = document.getElementById('qtyInput');
+  var qty = parseFloat(qtyInput?.value) || 0;
 
-  let totalPax = 0;
-  let totalMachine = 0;
-  let totalTime = 0;
-  let totalRunTime = 0;
-  let totalLabor = 0;
-  let totalMc = 0;
-  let totalDL = 0;
-  let totalVOH = 0;
-  let totalFOH = 0;
+  var totalPax = 0;
+  var totalMachine = 0;
+  var totalTime = 0;
+  var totalRunTime = 0;
+  var totalLabor = 0;
+  var totalMc = 0;
+  var totalDL = 0;
+  var totalVOH = 0;
+  var totalFOH = 0;
 
-  const rows = document.querySelectorAll('#tableBody tr');
+  var rows = document.querySelectorAll('#tableBody tr');
 
-  rows.forEach(row => {
-    const paxInput = row.querySelector('.pax-input');
-    const machineInput = row.querySelector('.machine-input');
-    const timeInput = row.querySelector('.time-input');
+  rows.forEach(function(row) {
+    var paxInput = row.querySelector('.pax-input');
+    var machineInput = row.querySelector('.machine-input');
+    var timeInput = row.querySelector('.time-input');
 
-    const pax = parseFloat(paxInput?.value) || 0;
-    const machine = parseFloat(machineInput?.value) || 0;
-    const time = parseFloat(timeInput?.value) || 0;
+    var pax = parseFloat(paxInput?.value) || 0;
+    var machine = parseFloat(machineInput?.value) || 0;
+    var time = parseFloat(timeInput?.value) || 0;
 
-    const calc = calculateRow(pax, machine, time, qty);
+    var calc = calculateRow(pax, machine, time, qty);
 
     // Update computed cells in DOM
-    const runTimeCell = row.querySelector('.run-time-cell');
-    const laborMinCell = row.querySelector('.labor-min-cell');
-    const mcMinCell = row.querySelector('.mc-min-cell');
-    const dlUnitsCell = row.querySelector('.dl-units-cell');
-    const dlCell = row.querySelector('.dl-cell');
-    const vohCell = row.querySelector('.voh-cell');
-    const fohCell = row.querySelector('.foh-cell');
+    var runTimeCell = row.querySelector('.run-time-cell');
+    var laborMinCell = row.querySelector('.labor-min-cell');
+    var mcMinCell = row.querySelector('.mc-min-cell');
+    var dlUnitsCell = row.querySelector('.dl-units-cell');
+    var dlCell = row.querySelector('.dl-cell');
+    var vohCell = row.querySelector('.voh-cell');
+    var fohCell = row.querySelector('.foh-cell');
 
     if (runTimeCell) runTimeCell.textContent = formatNumber(calc.runTime);
     if (laborMinCell) laborMinCell.textContent = formatNumber(calc.laborMin);
@@ -103,9 +188,9 @@ function calculateAll() {
     if (fohCell) fohCell.textContent = formatNumber(calc.foh);
 
     // Accumulate totals
-    totalPax += safePax;
-    totalMachine += safeMachine;
-    totalTime += safeTime;
+    totalPax += pax;
+    totalMachine += machine;
+    totalTime += time;
     totalRunTime += calc.runTime;
     totalLabor += calc.laborMin;
     totalMc += calc.mcMin;
@@ -133,7 +218,7 @@ function calculateAll() {
  * @param {Object} totals
  */
 function updateTotals(totals) {
-  const els = {
+  var els = {
     sumPax: document.getElementById('sumPax'),
     sumMachine: document.getElementById('sumMachine'),
     sumTime: document.getElementById('sumTime'),
@@ -162,12 +247,17 @@ function updateTotals(totals) {
  * @param {number} decimals
  * @returns {string}
  */
-function formatNumber(num, decimals = CALC_CONSTANTS.DECIMAL_PLACES_DISPLAY) {
+function formatNumber(num, decimals) {
+  if (decimals === undefined) decimals = CALC_CONSTANTS.DECIMAL_PLACES_DISPLAY;
   if (isNaN(num) || !isFinite(num)) return '0.00000';
   return num.toFixed(decimals);
 }
 
 // Expose globally
+window.evaluateFormula = evaluateFormula;
+window.evaluateTimeFormula = evaluateTimeFormula;
+window.restoreTimeFormula = restoreTimeFormula;
+window.handleTimeKeydown = handleTimeKeydown;
 window.calculateRow = calculateRow;
 window.calculateAll = calculateAll;
 window.updateTotals = updateTotals;

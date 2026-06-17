@@ -6,12 +6,6 @@
    and testing. Replace with real API calls.
    ============================================ */
 
-/* Line Descriptions Database mapping */
-const LINE_DESCRIPTIONS = {
-  'L01': 'L01 - L1 COATINGS',
-  'L11': 'L11 - L11 LINE'
-};
-
 /**
  * Mock database for line standard activities
  * Maps production line codes to arrays of activity names
@@ -206,7 +200,6 @@ window.removeLineActivity = removeLineActivity;
 window.updateLineActivity = updateLineActivity;
 
 // New exposures
-window.LINE_DESCRIPTIONS = LINE_DESCRIPTIONS;
 window.addProductionLine = addProductionLine;
 window.updateProductionLine = updateProductionLine;
 window.deleteProductionLine = deleteProductionLine;

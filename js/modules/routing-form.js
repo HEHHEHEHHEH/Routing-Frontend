@@ -13,14 +13,14 @@
  * @param {number|string} machine - Number of machines
  * @param {number|string} time - Time in minutes
  */
-function addRow(activityName = '', pax = '', machine = '', time = '') {
-  const tbody = document.getElementById('tableBody');
+function addRow(activityName, pax, machine, time) {
+  var tbody = document.getElementById('tableBody');
   if (!tbody) return;
 
-  const tr = document.createElement('tr');
+  var tr = document.createElement('tr');
 
-  const isDisabled = !App.isFormEditable ? 'disabled' : '';
-  const displayBtn = App.isFormEditable ? 'inline-flex' : 'none';
+  var isDisabled = !App.isFormEditable ? 'disabled' : '';
+  var displayBtn = App.isFormEditable ? 'inline-flex' : 'none';
 
   tr.innerHTML = `
     <td class="bg-excel-yellow p-0">
@@ -47,12 +47,12 @@ function addRow(activityName = '', pax = '', machine = '', time = '') {
              ${isDisabled}>
     </td>
     <td class="bg-excel-yellow p-0">
-      <input type="number"
-             step="0.0001"
+      <input type="text"
              class="excel-input time-input"
              value="${time}"
-             min="0"
-             oninput="calculateAll()"
+             onblur="evaluateTimeFormula(this)"
+             onfocus="restoreTimeFormula(this)"
+             onkeydown="handleTimeKeydown(event, this)"
              ${isDisabled}>
     </td>
 
@@ -89,7 +89,7 @@ function addRow(activityName = '', pax = '', machine = '', time = '') {
  * @param {HTMLButtonElement} btn - The remove button clicked
  */
 function removeRow(btn) {
-  const row = btn.closest('tr');
+  var row = btn.closest('tr');
   if (row) {
     row.remove();
     calculateAll();
@@ -101,10 +101,10 @@ function removeRow(btn) {
  * Collects form data and stores it in the mock database
  */
 function saveRoutingDocument() {
-  const itemCode = document.getElementById('itemCode')?.value.trim();
-  const skuDesc = document.getElementById('skuDesc')?.value.trim();
-  const prodLine = document.getElementById('prodLine')?.value;
-  const qty = document.getElementById('qtyInput')?.value;
+  var itemCode = document.getElementById('itemCode')?.value.trim();
+  var skuDesc = document.getElementById('skuDesc')?.value.trim();
+  var prodLine = document.getElementById('prodLine')?.value;
+  var qty = document.getElementById('qtyInput')?.value;
 
   // Validation
   if (!itemCode) {
@@ -121,42 +121,42 @@ function saveRoutingDocument() {
   }
 
   // Collect activities from table
-  const activities = [];
-  const rows = document.querySelectorAll('#tableBody tr');
+  var activities = [];
+  var rows = document.querySelectorAll('#tableBody tr');
 
-  rows.forEach(row => {
-    const activityName = row.querySelector('input[type="text"]')?.value.trim();
-    const pax = parseFloat(row.querySelector('.pax-input')?.value) || 0;
-    const machine = parseFloat(row.querySelector('.machine-input')?.value) || 0;
-    const time = parseFloat(row.querySelector('.time-input')?.value) || 0;
+  rows.forEach(function(row) {
+    var activityName = row.querySelector('input[type="text"]')?.value.trim();
+    var pax = parseFloat(row.querySelector('.pax-input')?.value) || 0;
+    var machine = parseFloat(row.querySelector('.machine-input')?.value) || 0;
+    var time = parseFloat(row.querySelector('.time-input')?.value) || 0;
 
     if (activityName) {
       activities.push({
         activities: activityName,
-        pax,
-        machine,
+        pax: pax,
+        machine: machine,
         time_min: time
       });
     }
   });
 
   // Build record
-  const record = {
+  var record = {
     inventory_id: itemCode,
     revision_descr: skuDesc,
     qty: parseFloat(qty) || 1,
     production_line_code: prodLine,
     production_line: LINE_DESCRIPTIONS[prodLine] || prodLine,
     product_type: App.currentMode === 'BM' ? 'Base Material (BM)' : 'Finished Good (FG)',
-    activities
+    activities: activities
   };
 
   // Save to mock database
   saveRoutingRecord(itemCode, record);
 
   // Show success message
-  const action = App.currentState === AppState.UPDATE ? 'updated' : 'saved';
-  alert(`Routing document ${action} successfully!\n\nItem Code: ${itemCode}\nSKU: ${skuDesc}\nLine: ${prodLine}`);
+  var action = App.currentState === AppState.UPDATE ? 'updated' : 'saved';
+  alert('Routing document ' + action + ' successfully!\n\nItem Code: ' + itemCode + '\nSKU: ' + skuDesc + '\nLine: ' + prodLine);
 }
 
 /**
@@ -165,14 +165,14 @@ function saveRoutingDocument() {
  */
 function loadDataIntoForm(data) {
   // Determine FG or BM mode
-  const isBM = isBulkMaterial(data.product_type);
+  var isBM = isBulkMaterial(data.product_type);
   setMode(isBM ? 'BM' : 'FG');
 
   // Fill form fields
-  const itemCodeEl = document.getElementById('itemCode');
-  const skuDescEl = document.getElementById('skuDesc');
-  const qtyInputEl = document.getElementById('qtyInput');
-  const prodLineEl = document.getElementById('prodLine');
+  var itemCodeEl = document.getElementById('itemCode');
+  var skuDescEl = document.getElementById('skuDesc');
+  var qtyInputEl = document.getElementById('qtyInput');
+  var prodLineEl = document.getElementById('prodLine');
 
   if (itemCodeEl) itemCodeEl.value = data.inventory_id || '';
   if (skuDescEl) skuDescEl.value = data.revision_descr || '';
@@ -183,17 +183,17 @@ function loadDataIntoForm(data) {
   }
 
   // Clear and repopulate table rows
-  const tableBody = document.getElementById('tableBody');
+  var tableBody = document.getElementById('tableBody');
   if (tableBody) {
     tableBody.innerHTML = '';
   }
 
   if (data.activities && data.activities.length > 0) {
-    data.activities.forEach(act => {
-      const name = act.activities || act.name || '';
-      const pax = act.pax || 0;
-      const machine = act.machine || 0;
-      const time = act.time_min || act.time || 0;
+    data.activities.forEach(function(act) {
+      var name = act.activities || act.name || '';
+      var pax = act.pax || 0;
+      var machine = act.machine || 0;
+      var time = act.time_min || act.time || 0;
       addRow(name, pax, machine, time);
     });
   } else {
