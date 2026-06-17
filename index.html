@@ -228,50 +228,69 @@
          Activity CRUD for each production line
          ============================================ -->
     <div id="view-manage" class="hidden">
-      <h3 style="font-size:1.25rem;font-weight:700;color:var(--gray-800);margin-bottom:1.5rem;">
-        Line Activity Database
-      </h3>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h3 style="font-size:1.25rem;font-weight:700;color:var(--gray-800);">
+          Line Activity Database
+        </h3>
+        <span style="background-color: #fee2e2; color: #991b1b; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 600; border: 1px solid #f87171;">
+          ⚠️ Sensitive Data Entry
+        </span>
+      </div>
 
-      <div class="manage-grid">
-        <!-- Sidebar: Line Selection -->
-        <div class="manage-sidebar">
-          <label for="manageLineSelect" class="block font-semibold mb-2">
-            Select Production Line to Edit:
+      <div class="manage-grid" style="display: grid; grid-template-columns: 300px 1fr; gap: 1.5rem;">
+        
+        <div class="manage-sidebar" style="background: #f8fafc; padding: 1.5rem; border-radius: 8px; border: 1px solid #e2e8f0; height: fit-content;">
+          <label for="manageLineSelect" class="block font-semibold mb-2 text-gray-800">
+            1. Manage Production Line:
           </label>
           <select id="manageLineSelect"
-                  class="w-full border border-gray-300 rounded px-3 py-2 bg-white"
+                  class="w-full border border-gray-300 rounded px-3 py-2 bg-white mb-3"
                   onchange="renderManageActivities()">
             <option value="" disabled selected>-- Choose Line --</option>
           </select>
-          <div id="manageLineDesc" class="line-description"></div>
+          
+          <div id="manageLineDesc" class="line-description mb-4 font-medium text-gray-700"></div>
+
+          <div style="display: flex; flex-direction: column; gap: 0.5rem; border-top: 1px solid #e2e8f0; padding-top: 1rem;">
+            <button onclick="handleCreateLine()" class="btn btn--primary w-full" style="justify-content: center;">
+              + Create New Line
+            </button>
+            <button id="btnEditLine" onclick="handleEditLine()" class="btn btn--secondary w-full hidden" style="justify-content: center;">
+              ✎ Edit Line Name
+            </button>
+            <button id="btnDeleteLine" onclick="handleDeleteLine()" class="btn btn--danger w-full hidden" style="justify-content: center;">
+              🗑️ Delete Line
+            </button>
+          </div>
         </div>
 
-        <!-- Content: Activity List -->
         <div class="manage-content">
-          <div id="activityEditorSection" class="hidden">
-            <label class="block font-semibold mb-2">Activities for this Line:</label>
+          <div id="activityEditorSection" class="hidden" style="background: #ffffff; padding: 1.5rem; border-radius: 8px; border: 1px solid #e2e8f0;">
+            <label class="block font-semibold mb-4 text-gray-800" style="font-size: 1.1rem; border-bottom: 2px solid #f1f5f9; padding-bottom: 0.5rem;">
+              2. Manage Activities for Selected Line
+            </label>
 
-            <div class="activity-list">
-              <ul id="manageActivityList">
-                <!-- Populated by manage-activities.js -->
-              </ul>
-              <div id="emptyActivitiesMsg" class="activity-empty-msg hidden">
-                No activities found for this line.
-              </div>
+            <div style="display:flex; gap:0.5rem; margin-bottom: 1.5rem; background: #f8fafc; padding: 1rem; border-radius: 6px; border: 1px dashed #cbd5e1;">
+              <input type="text"
+                    id="newActivityInput"
+                    class="border border-gray-300 rounded px-3 py-2 flex-1"
+                    placeholder="Type new activity name here..."
+                    onkeypress="handleActivityKeypress(event)">
+              <button onclick="addActivityToLine()" class="btn btn--dark">
+                + Add Activity
+              </button>
             </div>
 
-            <div style="display:flex;gap:0.5rem;">
-              <input type="text"
-                     id="newActivityInput"
-                     class="border border-gray-300 rounded px-3 py-2 flex-1"
-                     placeholder="Enter new activity name..."
-                     onkeypress="handleActivityKeypress(event)">
-              <button onclick="addActivityToLine()" class="btn btn--dark">
-                Add Activity
-              </button>
+            <div class="activity-list">
+              <ul id="manageActivityList" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                </ul>
+              <div id="emptyActivitiesMsg" class="activity-empty-msg hidden" style="color: #64748b; font-style: italic;">
+                No activities found for this line. Add one above.
+              </div>
             </div>
           </div>
         </div>
+        
       </div>
     </div>
 

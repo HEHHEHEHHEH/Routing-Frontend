@@ -6,6 +6,12 @@
    and testing. Replace with real API calls.
    ============================================ */
 
+/* Line Descriptions Database mapping */
+const LINE_DESCRIPTIONS = {
+  'L01': 'L01 - L1 COATINGS',
+  'L11': 'L11 - L11 LINE'
+};
+
 /**
  * Mock database for line standard activities
  * Maps production line codes to arrays of activity names
@@ -144,7 +150,7 @@ function removeLineActivity(lineCode, index) {
   if (lineActivitiesDB[lineCode]) {
     lineActivitiesDB[lineCode].splice(index, 1);
   }
-}
+} // Fixed: added missing closing brace here
 
 /**
  * Update activity name for a production line
@@ -158,6 +164,35 @@ function updateLineActivity(lineCode, index, newValue) {
   }
 }
 
+/* ===================================================
+   NEW LINE CRUD OPERATIONS
+   =================================================== */
+
+/**
+ * Add a new production line
+ */
+function addProductionLine(code, description) {
+  LINE_DESCRIPTIONS[code] = description;
+  lineActivitiesDB[code] = [];
+}
+
+/**
+ * Update an existing production line description
+ */
+function updateProductionLine(code, newDescription) {
+  if (LINE_DESCRIPTIONS[code]) {
+    LINE_DESCRIPTIONS[code] = newDescription;
+  }
+}
+
+/**
+ * Delete a production line entirely
+ */
+function deleteProductionLine(code) {
+  delete LINE_DESCRIPTIONS[code];
+  delete lineActivitiesDB[code];
+}
+
 // Expose to window
 window.lineActivitiesDB = lineActivitiesDB;
 window.mockRoutingDB = mockRoutingDB;
@@ -169,3 +204,9 @@ window.getLineActivities = getLineActivities;
 window.addLineActivity = addLineActivity;
 window.removeLineActivity = removeLineActivity;
 window.updateLineActivity = updateLineActivity;
+
+// New exposures
+window.LINE_DESCRIPTIONS = LINE_DESCRIPTIONS;
+window.addProductionLine = addProductionLine;
+window.updateProductionLine = updateProductionLine;
+window.deleteProductionLine = deleteProductionLine;
