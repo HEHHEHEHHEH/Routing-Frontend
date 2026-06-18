@@ -190,6 +190,7 @@ async function saveRoutingDocument() {
   var skuDesc  = document.getElementById('skuDesc')?.value.trim();
   var prodLine = document.getElementById('prodLine')?.value;
   var qty      = document.getElementById('qtyInput')?.value;
+  var notes    = document.getElementById('notesInput')?.value.trim() || '';
 
   // Validation
   if (!itemCode) {
@@ -230,6 +231,7 @@ async function saveRoutingDocument() {
     inventory_id:         itemCode,
     revision_descr:       skuDesc,
     qty:                  parseFloat(qty) || 1,
+    notes:                notes,
     production_line_code: prodLine,
     production_line:      LINE_DESCRIPTIONS[prodLine] || prodLine,
     product_type:         isBM ? 'Base Material (BM)' : 'Finished Good (FG)',
@@ -285,6 +287,10 @@ function loadDataIntoForm(data) {
   if (itemCodeEl) itemCodeEl.value = data.inventory_id || '';
   if (skuDescEl)  skuDescEl.value  = data.revision_descr || '';
   if (qtyInputEl) qtyInputEl.value = data.qty || data.quantity || 1;
+
+  const notesInputEl = document.getElementById('notesInput');
+  if (notesInputEl) notesInputEl.value = data.notes || '';
+
   if (prodLineEl) {
     // Support both internal and raw API field names
     prodLineEl.value = data.production_line_code

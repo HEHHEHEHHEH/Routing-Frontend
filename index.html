@@ -214,6 +214,9 @@
                    value="1"
                    oninput="calculateAll()">
           </div>
+          <!-- Notes field kept as hidden input so JS references still work;
+               not shown in the ADD tab per requirements -->
+          <input type="hidden" id="notesInput" value="">
         </div>
 
         <div class="space-y-3">
@@ -291,10 +294,20 @@
         </button>
       </div>
 
-      <!-- Save Button -->
+      <!-- Save Button (ADD mode) -->
       <div id="save-section" class="save-section">
         <button onclick="saveRoutingDocument()" class="btn btn--success">
           Save Routing Document
+        </button>
+      </div>
+
+      <!-- Update / Delete Buttons (UPDATE mode only, shown after search finds a record) -->
+      <div id="update-action-buttons" class="save-section" style="display:none; gap:0.75rem;">
+        <button onclick="handleDeleteItem()" class="btn btn--danger">
+          Delete Record
+        </button>
+        <button onclick="handleUpdateItem()" class="btn btn--success">
+          Update Routing Document
         </button>
       </div>
     </div>

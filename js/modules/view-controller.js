@@ -55,7 +55,7 @@ function updateLineDescription() {
 function setFormEditable(isEditable) {
   App.isFormEditable = isEditable;
 
-  const fields = ['itemCode', 'skuDesc', 'qtyInput', 'prodLine'];
+  const fields = ['itemCode', 'skuDesc', 'qtyInput', 'prodLine', 'notesInput'];
 
   fields.forEach(id => {
     const el = document.getElementById(id);
@@ -92,11 +92,12 @@ function clearForm() {
   setMode('FG');
 
   const fields = {
-    'itemCode': '',
-    'skuDesc':  '',
-    'qtyInput': '1',
-    'prodLine': '',
-    'lineDesc': ''
+    'itemCode':   '',
+    'skuDesc':    '',
+    'qtyInput':   '1',
+    'prodLine':   '',
+    'lineDesc':   '',
+    'notesInput': ''
   };
 
   Object.entries(fields).forEach(([id, value]) => {
@@ -154,6 +155,7 @@ function saveTabFormState(tabKey) {
   const skuDesc  = document.getElementById('skuDesc')?.value   || '';
   const qty      = document.getElementById('qtyInput')?.value  || '1';
   const prodLine = document.getElementById('prodLine')?.value  || '';
+  const notes    = document.getElementById('notesInput')?.value || '';
   const mode     = App.currentMode || 'FG';
 
   // Save each table row
@@ -173,7 +175,7 @@ function saveTabFormState(tabKey) {
     });
   });
 
-  TabFormState[tabKey] = { itemCode, skuDesc, qty, prodLine, mode, rows };
+  TabFormState[tabKey] = { itemCode, skuDesc, qty, prodLine, notes, mode, rows };
 }
 
 /**
@@ -193,10 +195,12 @@ function restoreTabFormState(tabKey) {
   const skuDescEl  = document.getElementById('skuDesc');
   const qtyEl      = document.getElementById('qtyInput');
   const prodLineEl = document.getElementById('prodLine');
+  const notesEl    = document.getElementById('notesInput');
 
   if (itemCodeEl) itemCodeEl.value = saved.itemCode;
   if (skuDescEl)  skuDescEl.value  = saved.skuDesc;
   if (qtyEl)      qtyEl.value      = saved.qty;
+  if (notesEl)    notesEl.value    = saved.notes || '';
   if (prodLineEl) {
     prodLineEl.value = saved.prodLine;
     updateLineDescription();

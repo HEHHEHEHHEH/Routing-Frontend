@@ -118,6 +118,10 @@ function showRoutingView(viewRouting, viewManage, viewAllData, mode, previousSta
   if (mode === 'add') {
     searchSection.classList.add('hidden');
     saveBtn.classList.remove('hidden');
+    // Hide UPDATE-only action buttons when on other tabs
+    if (typeof _setUpdateActionButtonsVisible === 'function') {
+      _setUpdateActionButtonsVisible(false);
+    }
 
     // Restore saved state or start fresh
     const restored = restoreTabFormState(AppState.ADD);
@@ -133,6 +137,10 @@ function showRoutingView(viewRouting, viewManage, viewAllData, mode, previousSta
   } else if (mode === 'lookup') {
     searchSection.classList.remove('hidden');
     saveBtn.classList.add('hidden');
+    // Hide UPDATE-only action buttons when on other tabs
+    if (typeof _setUpdateActionButtonsVisible === 'function') {
+      _setUpdateActionButtonsVisible(false);
+    }
 
     // Restore saved state or start fresh
     const restored = restoreTabFormState(AppState.LOOKUP);
@@ -151,13 +159,14 @@ function showRoutingView(viewRouting, viewManage, viewAllData, mode, previousSta
 
   } else if (mode === 'update') {
     searchSection.classList.remove('hidden');
-    saveBtn.classList.remove('hidden');
+    saveBtn.classList.add('hidden'); // Save button is replaced by Update/Delete buttons in upper right
 
     // Restore saved state or start fresh
     const restored = restoreTabFormState(AppState.UPDATE);
     if (!restored) {
       clearForm();
       setFormEditable(false);
+      _setUpdateActionButtonsVisible(false);
       if (searchStatus) {
         searchStatus.textContent = 'Search to find a record to edit.';
         searchStatus.className   = 'search-status search-status--neutral';
@@ -168,6 +177,7 @@ function showRoutingView(viewRouting, viewManage, viewAllData, mode, previousSta
       const itemCodeEl = document.getElementById('itemCode');
       const hasRecord  = itemCodeEl && itemCodeEl.value.trim() !== '';
       setFormEditable(hasRecord);
+      _setUpdateActionButtonsVisible(hasRecord);
       if (hasRecord) {
         // Item code itself stays locked (can't change it during update)
         if (itemCodeEl) itemCodeEl.disabled = true;

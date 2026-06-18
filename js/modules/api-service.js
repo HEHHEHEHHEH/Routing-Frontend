@@ -114,7 +114,7 @@ async function apiGetItem(itemCode) {
  * @param {Object} payload - Internal record object (fields to update)
  */
 async function apiUpdateItem(itemCode, payload) {
-  const body = _mapItemPayload(payload);
+  const body = _mapItemMetaPayload(payload);
   return _apiFetch(`/api/items/${encodeURIComponent(itemCode)}`, 'PATCH', body);
 }
 
@@ -182,10 +182,7 @@ async function apiDeleteItemActivity(itemCode, activityId) {
 
 /**
  * Map our internal record format to the API's expected field names.
- * API uses: inventory_id, revision_descr, product_type, quantity,
- *           fg_production_line, fg_production_line_code,
- *           bm_production_line, bm_production_line_code, notes, activities[]
- * Each activity uses: activity_name (not "activities")
+ * Used for POST /api/items (create) — includes activities.
  * @param {Object} record - Internal routing record
  * @returns {Object} API-ready payload
  */
@@ -202,7 +199,7 @@ function _mapItemPayload(record) {
 
   // Map production line to correct FG/BM field based on product type
   const lineCode = record.production_line_code || record.prodLine || '';
-  const lineName = record.production_line || LINE_DESCRIPTIONS[lineCode] || lineCode;
+  const lineName = record.production_line || (typeof LINE_DESCRIPTIONS !== 'undefined' ? LINE_DESCRIPTIONS[lineCode] : '') || lineCode;
 
   if (isBM) {
     body.bm_production_line_code = lineCode;
@@ -217,18 +214,52 @@ function _mapItemPayload(record) {
   }
 
   // Map activities — API expects "activity_name", not "activities"
+  // Only included on CREATE (POST); PATCH uses _mapItemMetaPayload instead
   if (Array.isArray(record.activities) && record.activities.length > 0) {
     body.activities = record.activities.map((act, i) => ({
       activity_name: act.activities || act.activity_name || act.name || '',
-      pax:        act.pax     || 0,
-      machine:    act.machine || 0,
-      time_min:   act.time_min || act.time || 0,
+      pax:        Number(act.pax)     || 0,
+      machine:    Number(act.machine) || 0,
+      time_min:   Number(act.time_min || act.time) || 0,
       type:       act.type    || 'Labor',
       item_id:    act.item_id || act.activities || act.activity_name || '',
       class:      act.class   || 'DL',
       class_1:    act.class_1 || 'DL',
       sort_order: act.sort_order || (i + 1),
     }));
+  }
+
+  return body;
+}
+
+/**
+ * Map only metadata fields for PATCH /api/items/{item_code}.
+ * The PATCH endpoint does NOT accept activities — those are managed separately.
+ * @param {Object} record - Internal routing record
+ * @returns {Object} API-ready metadata-only payload
+ */
+function _mapItemMetaPayload(record) {
+  const isBM = record.product_type && record.product_type.includes('Base');
+  const lineCode = record.production_line_code || record.prodLine || '';
+  const lineName = record.production_line || (typeof LINE_DESCRIPTIONS !== 'undefined' ? LINE_DESCRIPTIONS[lineCode] : '') || lineCode;
+
+  const body = {
+    revision_descr: record.revision_descr || record.skuDesc || '',
+    product_type:   record.product_type || 'Finished Good (FG)',
+    quantity:       record.qty || record.quantity || 1,
+    notes:          record.notes || '',
+  };
+
+  if (isBM) {
+    body.bm_production_line_code = lineCode;
+    body.bm_production_line      = lineName;
+    body.fg_production_line_code = null;
+    body.fg_production_line      = null;
+  } else {
+    body.fg_production_line_code = lineCode;
+    body.fg_production_line      = lineName;
+    body.bm_production_line_code = null;
+    body.bm_production_line      = null;
   }
 
   return body;
@@ -443,3 +474,4 @@ window.apiDeleteLineActivity      = apiDeleteLineActivity;
 // Internal helpers exposed for use in other modules
 window._normalizeApiItem          = _normalizeApiItem;
 window._mapItemPayload            = _mapItemPayload;
+window._mapItemMetaPayload        = _mapItemMetaPayload;

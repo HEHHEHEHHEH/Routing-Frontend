@@ -29,9 +29,6 @@
 async function initApp() {
   console.log('Pioneer Adhesives Routing System - Initializing...');
 
-  // Seed mock database with test data for pagination
-  seedMockData(25);
-
   // --- Load production lines from API into local cache ---
   try {
     const res = await apiGetProductionLines();

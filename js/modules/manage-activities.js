@@ -388,6 +388,8 @@ async function handleCreateLine() {
 
   // Keep local cache in sync
   addProductionLine(cleanCode, cleanDesc);
+  // Sync the production line dropdown on all routing tabs immediately (no refresh needed)
+  if (typeof populateProdLineSelect === 'function') populateProdLineSelect();
   initManageLines(cleanCode);
 }
 
@@ -465,6 +467,8 @@ async function handleEditLine() {
 
   // Keep local cache in sync
   renameProductionLine(selectedLine, newCode, newDesc);
+  // Sync the production line dropdown on all routing tabs immediately (no refresh needed)
+  if (typeof populateProdLineSelect === 'function') populateProdLineSelect();
   initManageLines(newCode);
 }
 
@@ -490,6 +494,8 @@ async function handleDeleteLine() {
 
   // Keep local cache in sync
   deleteProductionLine(selectedLine);
+  // Sync the production line dropdown on all routing tabs immediately (no refresh needed)
+  if (typeof populateProdLineSelect === 'function') populateProdLineSelect();
   initManageLines();
   renderManageActivities();
 }
