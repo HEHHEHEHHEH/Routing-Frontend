@@ -5,7 +5,7 @@
    Simulates a backend database for development
    and testing. Replace with real API calls.
    ============================================ */
-
+ 
 /**
  * Mock database for line standard activities
  * Maps production line codes to arrays of activity names
@@ -24,7 +24,7 @@ const lineActivitiesDB = {
     'REBOXING'
   ]
 };
-
+ 
 /**
  * Mock routing database
  * Maps inventory IDs to routing records
@@ -70,7 +70,7 @@ const mockRoutingDB = {
     product_type: 'Finished Good (FG)'
   }
 };
-
+ 
 /**
  * Seed mock database with dummy data for pagination testing
  * @param {number} count - Number of dummy records to generate
@@ -87,7 +87,7 @@ function seedMockData(count = 25) {
     };
   }
 }
-
+ 
 /**
  * Get a single routing record by item code
  * @param {string} itemCode - The inventory ID to look up
@@ -96,7 +96,7 @@ function seedMockData(count = 25) {
 function getRoutingRecord(itemCode) {
   return mockRoutingDB[itemCode.toUpperCase()] || null;
 }
-
+ 
 /**
  * Get all routing records as an array
  * @returns {Object[]}
@@ -104,7 +104,7 @@ function getRoutingRecord(itemCode) {
 function getAllRoutingRecords() {
   return Object.values(mockRoutingDB);
 }
-
+ 
 /**
  * Save or update a routing record
  * @param {string} itemCode
@@ -113,7 +113,7 @@ function getAllRoutingRecords() {
 function saveRoutingRecord(itemCode, data) {
   mockRoutingDB[itemCode.toUpperCase()] = data;
 }
-
+ 
 /**
  * Get activities for a production line
  * @param {string} lineCode
@@ -122,7 +122,7 @@ function saveRoutingRecord(itemCode, data) {
 function getLineActivities(lineCode) {
   return lineActivitiesDB[lineCode] || [];
 }
-
+ 
 /**
  * Add activity to a production line
  * @param {string} lineCode
@@ -134,7 +134,7 @@ function addLineActivity(lineCode, activity) {
   }
   lineActivitiesDB[lineCode].push(activity.toUpperCase());
 }
-
+ 
 /**
  * Remove activity from a production line
  * @param {string} lineCode
@@ -145,7 +145,7 @@ function removeLineActivity(lineCode, index) {
     lineActivitiesDB[lineCode].splice(index, 1);
   }
 } // Fixed: added missing closing brace here
-
+ 
 /**
  * Update activity name for a production line
  * @param {string} lineCode
@@ -157,11 +157,11 @@ function updateLineActivity(lineCode, index, newValue) {
     lineActivitiesDB[lineCode][index] = newValue.trim().toUpperCase();
   }
 }
-
+ 
 /* ===================================================
    NEW LINE CRUD OPERATIONS
    =================================================== */
-
+ 
 /**
  * Add a new production line
  */
@@ -169,7 +169,7 @@ function addProductionLine(code, description) {
   LINE_DESCRIPTIONS[code] = description;
   lineActivitiesDB[code] = [];
 }
-
+ 
 /**
  * Update an existing production line description
  */
@@ -178,7 +178,36 @@ function updateProductionLine(code, newDescription) {
     LINE_DESCRIPTIONS[code] = newDescription;
   }
 }
-
+ 
+/**
+ * Rename a production line code and/or description.
+ * Migrates activities and routing records to the new code key.
+ * @param {string} oldCode
+ * @param {string} newCode
+ * @param {string} newDescription
+ */
+function renameProductionLine(oldCode, newCode, newDescription) {
+  if (!LINE_DESCRIPTIONS[oldCode]) return;
+ 
+  // Migrate LINE_DESCRIPTIONS
+  LINE_DESCRIPTIONS[newCode] = newDescription;
+  if (newCode !== oldCode) delete LINE_DESCRIPTIONS[oldCode];
+ 
+  // Migrate activities
+  if (lineActivitiesDB[oldCode]) {
+    lineActivitiesDB[newCode] = lineActivitiesDB[oldCode];
+    if (newCode !== oldCode) delete lineActivitiesDB[oldCode];
+  }
+ 
+  // Migrate any routing records that reference the old code
+  Object.keys(mockRoutingDB).forEach(key => {
+    const record = mockRoutingDB[key];
+    if (record.production_line_code === oldCode) {
+      record.production_line_code = newCode;
+    }
+  });
+}
+ 
 /**
  * Delete a production line entirely
  */
@@ -186,7 +215,7 @@ function deleteProductionLine(code) {
   delete LINE_DESCRIPTIONS[code];
   delete lineActivitiesDB[code];
 }
-
+ 
 // Expose to window
 window.lineActivitiesDB = lineActivitiesDB;
 window.mockRoutingDB = mockRoutingDB;
@@ -198,8 +227,9 @@ window.getLineActivities = getLineActivities;
 window.addLineActivity = addLineActivity;
 window.removeLineActivity = removeLineActivity;
 window.updateLineActivity = updateLineActivity;
-
+ 
 // New exposures
 window.addProductionLine = addProductionLine;
 window.updateProductionLine = updateProductionLine;
+window.renameProductionLine = renameProductionLine;
 window.deleteProductionLine = deleteProductionLine;

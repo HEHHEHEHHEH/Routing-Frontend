@@ -26,11 +26,35 @@
 /**
  * Initialize the application
  */
-function initApp() {
+async function initApp() {
   console.log('Pioneer Adhesives Routing System - Initializing...');
 
   // Seed mock database with test data for pagination
   seedMockData(25);
+
+  // --- Load production lines from API into local cache ---
+  try {
+    const res = await apiGetProductionLines();
+    if (res.ok && Array.isArray(res.data)) {
+      res.data.forEach(line => {
+        const code = line.line_code || line.code;
+        const desc = line.description || line.desc || code;
+        if (code) {
+          LINE_DESCRIPTIONS[code] = desc;
+          if (Array.isArray(line.activities)) {
+            lineActivitiesDB[code] = line.activities.map(a => a.activity_name || a.name || a);
+          } else if (!lineActivitiesDB[code]) {
+            lineActivitiesDB[code] = [];
+          }
+        }
+      });
+      console.log('[API] Production lines loaded from server.');
+    } else {
+      console.warn('[API] Could not load production lines, using local defaults.');
+    }
+  } catch (_) {
+    console.warn('[API] Unreachable — using local production line defaults.');
+  }
 
   // Set default tab (ADD mode)
   switchTab(AppState.ADD);

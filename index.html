@@ -17,6 +17,82 @@
     ├── layout.css     - Grid, flexbox, structural layouts
     └── components.css - Tables, buttons, forms, tabs
   -->
+
+    <style>
+      /* Hide DEL column in LOOKUP (read-only) mode */
+      #routingTable.hide-del .col-del,
+      #routingTable.hide-del .action-column {
+        display: none;
+      }
+
+      /* Green activity cell — all modes */
+      .bg-activity-green {
+        background-color: #d1fae5 !important;
+      }
+
+      /* Activity dropdown: ADD / UPDATE — enough right padding for the arrow */
+      .activity-select {
+        width: 100%;
+        height: 100%;
+        border: none;
+        background: transparent;
+        font-size: inherit;
+        font-family: inherit;
+        color: #1e293b;
+        padding: 0.25rem 1.6rem 0.25rem 0.4rem; /* right pad keeps text clear of arrow */
+        cursor: pointer;
+        outline: none;
+        appearance: auto;
+        -webkit-appearance: auto;
+        box-sizing: border-box;
+      }
+
+      /* LOOKUP mode: strip all input chrome from number/text cells */
+      #routingTable.hide-del td.bg-excel-yellow input[type="text"],
+      #routingTable.hide-del td.bg-excel-yellow input[type="number"] {
+        background: transparent !important;
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+        pointer-events: none;
+        -webkit-appearance: none;
+        appearance: none;
+        cursor: default;
+        padding: 0.25rem 0.4rem;
+      }
+      /* Strip yellow bg → green in LOOKUP */
+      #routingTable.hide-del td.bg-excel-yellow {
+        background-color: #d1fae5 !important;
+      }
+
+      /* LOOKUP activity cell: hide the <select> widget entirely,
+         show value as plain text via the td data-value attribute */
+      #routingTable.hide-del td.bg-activity-green {
+        position: relative;
+      }
+      #routingTable.hide-del td.bg-activity-green .activity-select {
+        /* Make select invisible but keep it in the DOM */
+        opacity: 0;
+        position: absolute;
+        pointer-events: none;
+      }
+      /* Show the plain text value using a sibling span injected by JS */
+      #routingTable.hide-del td.bg-activity-green .activity-label {
+        display: inline-block;
+        width: 100%;
+        padding: 0.25rem 0.4rem;
+        font-size: inherit;
+        font-family: inherit;
+        color: #1e293b;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      /* In editable mode the label span is hidden */
+      td.bg-activity-green .activity-label {
+        display: none;
+      }
+    </style>
 </head>
 <body>
 
@@ -166,8 +242,8 @@
           <thead>
             <tr>
               <th colspan="7" class="section-header--routing">ROUTING DETAILS</th>
-              <th colspan="5" class="section-header--bom">ACUMATICA BOM</th>
-              <th rowspan="2" class="action-column"></th>
+              <th colspan="6" class="section-header--bom">ACUMATICA BOM</th>
+              <th rowspan="2" class="action-column col-del">DEL</th>
             </tr>
             <tr>
               <th class="w-activity">Activities</th>
@@ -228,69 +304,183 @@
          Activity CRUD for each production line
          ============================================ -->
     <div id="view-manage" class="hidden">
+
+      <!-- Page Header -->
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-        <h3 style="font-size:1.25rem;font-weight:700;color:var(--gray-800);">
-          Line Activity Database
-        </h3>
-        <span style="background-color: #fee2e2; color: #991b1b; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 600; border: 1px solid #f87171;">
-          ⚠️ Sensitive Data Entry
+        <div>
+          <h3 style="font-size: 1.125rem; font-weight: 700; color: var(--gray-800); margin: 0 0 0.2rem;">Line Activity Database</h3>
+          <p style="font-size: 0.8rem; color: #64748b; margin: 0;">Manage production lines and their associated activities.</p>
+        </div>
+        <span style="display: inline-flex; align-items: center; gap: 0.35rem; background-color: #fff1f2; color: #be123c; padding: 0.3rem 0.85rem; border-radius: 9999px; font-size: 0.78rem; font-weight: 600; border: 1px solid #fecdd3; letter-spacing: 0.01em;">
+          &#9888; Sensitive Data Entry
         </span>
       </div>
 
-      <div class="manage-grid" style="display: grid; grid-template-columns: 300px 1fr; gap: 1.5rem;">
-        
-        <div class="manage-sidebar" style="background: #f8fafc; padding: 1.5rem; border-radius: 8px; border: 1px solid #e2e8f0; height: fit-content;">
-          <label for="manageLineSelect" class="block font-semibold mb-2 text-gray-800">
-            1. Manage Production Line:
+      <div style="display: grid; grid-template-columns: 280px 1fr; gap: 1.25rem; align-items: start;">
+
+        <!-- LEFT SIDEBAR: Line Selector -->
+        <div style="background: #f8fafc; padding: 1.25rem; border-radius: 10px; border: 1px solid #e2e8f0;">
+
+          <p style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #94a3b8; margin: 0 0 0.6rem;">Step 1</p>
+          <label for="manageLineSelect" style="display: block; font-size: 0.875rem; font-weight: 600; color: #1e293b; margin-bottom: 0.5rem;">
+            Select Production Line
           </label>
           <select id="manageLineSelect"
-                  class="w-full border border-gray-300 rounded px-3 py-2 bg-white mb-3"
+                  style="width: 100%; border: 1px solid #cbd5e1; border-radius: 7px; padding: 0.5rem 0.75rem; background: #ffffff; font-size: 0.875rem; color: #1e293b; margin-bottom: 0.75rem; appearance: auto;"
                   onchange="renderManageActivities()">
             <option value="" disabled selected>-- Choose Line --</option>
           </select>
-          
-          <div id="manageLineDesc" class="line-description mb-4 font-medium text-gray-700"></div>
 
-          <div style="display: flex; flex-direction: column; gap: 0.5rem; border-top: 1px solid #e2e8f0; padding-top: 1rem;">
-            <button onclick="handleCreateLine()" class="btn btn--primary w-full" style="justify-content: center;">
+          <div id="manageLineDesc" style="font-size: 0.8rem; font-weight: 500; color: #475569; background: #e8f0fe; border-left: 3px solid #3b82f6; border-radius: 0 6px 6px 0; padding: 0.45rem 0.7rem; margin-bottom: 1rem; display: none;"></div>
+
+          <div style="border-top: 1px solid #e2e8f0; padding-top: 1rem; display: flex; flex-direction: column; gap: 0.5rem;">
+            <button onclick="handleCreateLine()"
+                    style="width: 100%; padding: 0.55rem; border-radius: 7px; font-size: 0.84rem; font-weight: 600; background: #2563eb; color: #fff; border: none; cursor: pointer; transition: background 0.15s;"
+                    onmouseover="this.style.background='#1d4ed8'" onmouseout="this.style.background='#2563eb'">
               + Create New Line
             </button>
-            <button id="btnEditLine" onclick="handleEditLine()" class="btn btn--secondary w-full hidden" style="justify-content: center;">
-              ✎ Edit Line Name
+            <button id="btnEditLine" onclick="handleEditLine()"
+                    style="width: 100%; padding: 0.55rem; border-radius: 7px; font-size: 0.84rem; font-weight: 600; background: #fff; color: #374151; border: 1px solid #d1d5db; cursor: pointer; transition: background 0.15s; display: none;"
+                    onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='#fff'">
+              Edit Line Name
             </button>
-            <button id="btnDeleteLine" onclick="handleDeleteLine()" class="btn btn--danger w-full hidden" style="justify-content: center;">
-              🗑️ Delete Line
+            <button id="btnDeleteLine" onclick="handleDeleteLine()"
+                    style="width: 100%; padding: 0.55rem; border-radius: 7px; font-size: 0.84rem; font-weight: 600; background: #fff; color: #dc2626; border: 1px solid #fca5a5; cursor: pointer; transition: background 0.15s; display: none;"
+                    onmouseover="this.style.background='#fff1f2'" onmouseout="this.style.background='#fff'">
+              Delete Line
             </button>
           </div>
         </div>
 
-        <div class="manage-content">
-          <div id="activityEditorSection" class="hidden" style="background: #ffffff; padding: 1.5rem; border-radius: 8px; border: 1px solid #e2e8f0;">
-            <label class="block font-semibold mb-4 text-gray-800" style="font-size: 1.1rem; border-bottom: 2px solid #f1f5f9; padding-bottom: 0.5rem;">
-              2. Manage Activities for Selected Line
-            </label>
+        <!-- RIGHT CONTENT: Activity Editor -->
+        <div id="activityEditorSection" style="display: none; background: #ffffff; border-radius: 10px; border: 1px solid #e2e8f0; overflow: hidden;">
 
-            <div style="display:flex; gap:0.5rem; margin-bottom: 1.5rem; background: #f8fafc; padding: 1rem; border-radius: 6px; border: 1px dashed #cbd5e1;">
-              <input type="text"
-                    id="newActivityInput"
-                    class="border border-gray-300 rounded px-3 py-2 flex-1"
-                    placeholder="Type new activity name here..."
-                    onkeypress="handleActivityKeypress(event)">
-              <button onclick="addActivityToLine()" class="btn btn--dark">
-                + Add Activity
-              </button>
+          <!-- Section Header -->
+          <div style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; padding: 0.9rem 1.25rem; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <p style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #94a3b8; margin: 0 0 0.15rem;">Step 2</p>
+              <p style="font-size: 0.875rem; font-weight: 600; color: #1e293b; margin: 0;">Manage Activities for Selected Line</p>
             </div>
+            <span id="activityCountBadge" style="background: #e0f2fe; color: #0369a1; font-size: 0.75rem; font-weight: 600; padding: 0.2rem 0.65rem; border-radius: 9999px; border: 1px solid #bae6fd;">0 activities</span>
+          </div>
 
-            <div class="activity-list">
-              <ul id="manageActivityList" style="display: flex; flex-direction: column; gap: 0.5rem;">
-                </ul>
-              <div id="emptyActivitiesMsg" class="activity-empty-msg hidden" style="color: #64748b; font-style: italic;">
-                No activities found for this line. Add one above.
-              </div>
+          <!-- Add Activity Input -->
+          <div style="padding: 1rem 1.25rem; border-bottom: 1px solid #f1f5f9; background: #fafafa; display: flex; gap: 0.6rem; align-items: center;">
+            <input type="text"
+                   id="newActivityInput"
+                   style="flex: 1; border: 1px solid #cbd5e1; border-radius: 7px; padding: 0.5rem 0.75rem; font-size: 0.875rem; color: #1e293b; background: #fff; outline: none;"
+                   placeholder="Type activity name and press Enter or click Add..."
+                   onkeypress="handleActivityKeypress(event)"
+                   onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#cbd5e1'">
+            <button onclick="addActivityToLine()"
+                    style="padding: 0.5rem 1rem; border-radius: 7px; font-size: 0.84rem; font-weight: 600; background: #0f172a; color: #fff; border: none; cursor: pointer; white-space: nowrap; transition: background 0.15s;"
+                    onmouseover="this.style.background='#1e293b'" onmouseout="this.style.background='#0f172a'">
+              + Add Activity
+            </button>
+          </div>
+
+          <!-- Activity List -->
+          <div style="padding: 1rem 1.25rem; min-height: 120px;">
+            <ul id="manageActivityList" style="display: flex; flex-direction: column; gap: 0.5rem; list-style: none; padding: 0; margin: 0;"></ul>
+            <div id="emptyActivitiesMsg" style="display: none; text-align: center; padding: 2rem 1rem; color: #94a3b8; font-size: 0.875rem; font-style: italic;">
+              No activities yet. Add one above to get started.
             </div>
           </div>
+
         </div>
-        
+
+      </div>
+    </div>
+
+
+    <!-- ============================================
+         TIME FORMULA MODAL
+         Opens when user clicks a Time (min) cell
+         ============================================ -->
+    <div id="timeFormulaModal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.45); z-index:9999; align-items:center; justify-content:center;">
+      <div style="background:#fff; border-radius:14px; padding:2rem; max-width:440px; width:90%; box-shadow:0 20px 40px rgba(0,0,0,0.18); position:relative;">
+
+        <!-- Header -->
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem;">
+          <div style="display:flex; align-items:center; gap:0.6rem;">
+            <div style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:#eff6ff;border:1px solid #bfdbfe;">
+              <span style="font-size:0.95rem;color:#2563eb;font-style:italic;font-weight:700;">f</span>
+            </div>
+            <h4 style="font-size:1rem; font-weight:700; color:#0f172a; margin:0;">Time Formula</h4>
+          </div>
+          <button id="timeFormulaCloseBtn"
+                  style="background:none;border:none;cursor:pointer;font-size:1.1rem;color:#94a3b8;line-height:1;padding:0.2rem 0.4rem;border-radius:4px;"
+                  onmouseover="this.style.color='#475569'" onmouseout="this.style.color='#94a3b8'">
+            &times;
+          </button>
+        </div>
+
+        <!-- Description -->
+        <p style="font-size:0.82rem; color:#64748b; margin:0 0 1.25rem; line-height:1.55;">
+          Enter a formula like <code style="background:#f1f5f9;padding:0.1rem 0.35rem;border-radius:4px;color:#2563eb;font-size:0.8rem;">8/60</code> or
+          <code style="background:#f1f5f9;padding:0.1rem 0.35rem;border-radius:4px;color:#2563eb;font-size:0.8rem;">8/60+3/60</code>.
+          Supported operators: <code style="background:#f1f5f9;padding:0.1rem 0.35rem;border-radius:4px;color:#475569;font-size:0.8rem;">+ - * / ( )</code>
+        </p>
+
+        <!-- Formula Input -->
+        <label style="display:block;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#94a3b8;margin-bottom:0.4rem;">Formula</label>
+        <div style="display:flex;align-items:center;border:1.5px solid #3b82f6;border-radius:8px;overflow:hidden;background:#fff;margin-bottom:1rem;">
+          <span style="padding:0 0.6rem;font-size:0.9rem;color:#94a3b8;font-weight:600;border-right:1px solid #e2e8f0;background:#f8fafc;">=</span>
+          <input id="timeFormulaInput"
+                 type="text"
+                 placeholder="8/60 or 8/60+3/60"
+                 style="flex:1;border:none;outline:none;padding:0.55rem 0.75rem;font-size:0.9rem;color:#0f172a;font-family:monospace;">
+        </div>
+
+        <!-- Computed Result -->
+        <div style="display:flex;align-items:center;justify-content:space-between;background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:0.65rem 1rem;margin-bottom:1.5rem;">
+          <span style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#0369a1;">Computed Result</span>
+          <span id="timeFormulaResult" style="font-size:1rem;font-weight:700;color:#2563eb;font-family:monospace;">0.00000</span>
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="display:flex;gap:0.6rem;justify-content:flex-end;">
+          <button id="timeFormulaCancelBtn"
+                  style="padding:0.5rem 1.2rem;border-radius:8px;font-size:0.875rem;font-weight:600;background:#f1f5f9;color:#374151;border:1px solid #e2e8f0;cursor:pointer;"
+                  onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
+            Cancel
+          </button>
+          <button id="timeFormulaApplyBtn"
+                  style="padding:0.5rem 1.2rem;border-radius:8px;font-size:0.875rem;font-weight:600;background:#2563eb;color:#fff;border:none;cursor:pointer;"
+                  onmouseover="this.style.background='#1d4ed8'" onmouseout="this.style.background='#2563eb'">
+            Apply to Cell
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ============================================
+         CUSTOM MODAL DIALOG
+         Replaces browser prompt() and confirm()
+         ============================================ -->
+    <div id="customModal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.45); z-index:9999; align-items:center; justify-content:center;">
+      <div style="background:#fff; border-radius:14px; padding:2rem; max-width:420px; width:90%; box-shadow:0 20px 40px rgba(0,0,0,0.18); position:relative;">
+        <div id="modalIconWrap" style="margin-bottom:1rem;"></div>
+        <h4 id="modalTitle" style="font-size:1rem; font-weight:700; color:#0f172a; margin:0 0 0.4rem;"></h4>
+        <p id="modalMessage" style="font-size:0.875rem; color:#475569; margin:0 0 1.25rem; line-height:1.55;"></p>
+        <div id="modalInputWrap" style="display:none; margin-bottom:1rem;">
+          <input id="modalInput"
+                 style="width:100%; border:1px solid #cbd5e1; border-radius:8px; padding:0.55rem 0.8rem; font-size:0.875rem; color:#0f172a; box-sizing:border-box; outline:none;"
+                 onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#cbd5e1'">
+        </div>
+        <div style="display:flex; gap:0.6rem; justify-content:flex-end;">
+          <button id="modalCancelBtn"
+                  style="padding:0.5rem 1.2rem; border-radius:8px; font-size:0.875rem; font-weight:600; background:#f1f5f9; color:#374151; border:1px solid #e2e8f0; cursor:pointer;"
+                  onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
+            Cancel
+          </button>
+          <button id="modalConfirmBtn"
+                  style="padding:0.5rem 1.2rem; border-radius:8px; font-size:0.875rem; font-weight:600; background:#2563eb; color:#fff; border:none; cursor:pointer;"
+                  onmouseover="this.style.background='#1d4ed8'" onmouseout="this.style.background='#2563eb'">
+            Confirm
+          </button>
+        </div>
       </div>
     </div>
 
@@ -346,6 +536,9 @@
        JAVASCRIPT - Modular Architecture
        ============================================ -->
 
+  <!-- Layer 0: API Service -->
+  <script src="js/modules/api-service.js"></script>
+
   <!-- Layer 1: State & Data -->
   <script src="js/modules/state.js"></script>
   <script src="js/modules/mock-db.js"></script>
@@ -367,9 +560,10 @@
   <script src="js/modules/tabs.js"></script>
   <script src="js/main.js"></script>
 
-  <!--
+  <!-- 
     JS Module Hierarchy:
     main.js
+    ├── modules/api-service.js         - Backend API client (all endpoints)
     ├── modules/state.js              - App state, constants, enums
     ├── modules/mock-db.js            - In-memory data store
     ├── modules/utils.js              - Helper functions

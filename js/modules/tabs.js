@@ -5,7 +5,7 @@
    Manages switching between the 5 main views:
    ADD, LOOKUP, UPDATE, MANAGE, ALLDATA
    ============================================ */
-
+ 
 /**
  * Tab ID to DOM element ID mapping
  */
@@ -16,7 +16,7 @@ const TAB_ELEMENTS = {
   [AppState.MANAGE]:  'tab-manage',
   [AppState.ALLDATA]: 'tab-alldata'
 };
-
+ 
 /**
  * Switch to a different tab/view
  * Central routing function that handles all view transitions
@@ -25,7 +25,7 @@ const TAB_ELEMENTS = {
 function switchTab(tabId) {
   // Update global state
   App.currentState = tabId;
-
+ 
   // Reset all tab styles
   Object.values(TAB_ELEMENTS).forEach(id => {
     const el = document.getElementById(id);
@@ -33,7 +33,7 @@ function switchTab(tabId) {
       el.className = 'nav-tab nav-tab--inactive';
     }
   });
-
+ 
   // Set active tab style
   const activeTabId = TAB_ELEMENTS[tabId];
   if (activeTabId) {
@@ -42,11 +42,11 @@ function switchTab(tabId) {
       activeEl.className = 'nav-tab nav-tab--active';
     }
   }
-
+ 
   // Show/hide views based on tab
   routeToView(tabId);
 }
-
+ 
 /**
  * Route to the appropriate view based on state
  * @param {string} state
@@ -55,7 +55,7 @@ function routeToView(state) {
   const viewRouting = document.getElementById('view-routing');
   const viewManage = document.getElementById('view-manage');
   const viewAllData = document.getElementById('view-alldata');
-
+ 
   switch (state) {
     case AppState.ADD:
       showRoutingView(viewRouting, viewManage, viewAllData, 'add');
@@ -77,7 +77,7 @@ function routeToView(state) {
       showRoutingView(viewRouting, viewManage, viewAllData, 'add');
   }
 }
-
+ 
 /**
  * Configure and show the routing form view (ADD/LOOKUP/UPDATE)
  */
@@ -85,23 +85,25 @@ function showRoutingView(viewRouting, viewManage, viewAllData, mode) {
   viewRouting.classList.remove('hidden');
   viewManage.classList.add('hidden');
   viewAllData.classList.add('hidden');
-
+ 
   const searchSection = document.getElementById('search-section');
   const saveBtn = document.getElementById('save-section');
   const searchStatus = document.getElementById('search-status');
-
+ 
   if (mode === 'add') {
     // ADD mode: fresh form, editable
     searchSection.classList.add('hidden');
     saveBtn.classList.remove('hidden');
     clearForm();
     setFormEditable(true);
+    updateDelColumnVisibility();
   } else if (mode === 'lookup') {
     // LOOKUP mode: search required, read-only
     searchSection.classList.remove('hidden');
     saveBtn.classList.add('hidden');
     clearForm();
     setFormEditable(false);
+    updateDelColumnVisibility();
     if (searchStatus) {
       searchStatus.textContent = 'Search to view a record in Read-Only mode.';
       searchStatus.className = 'search-status search-status--neutral';
@@ -112,13 +114,14 @@ function showRoutingView(viewRouting, viewManage, viewAllData, mode) {
     saveBtn.classList.remove('hidden');
     clearForm();
     setFormEditable(false);
+    updateDelColumnVisibility();
     if (searchStatus) {
       searchStatus.textContent = 'Search to find a record to edit.';
       searchStatus.className = 'search-status search-status--neutral';
     }
   }
 }
-
+ 
 /**
  * Show the manage activities view
  */
@@ -128,7 +131,7 @@ function showManageView(viewRouting, viewManage, viewAllData) {
   viewManage.classList.remove('hidden');
   initManageLines();
 }
-
+ 
 /**
  * Show the all data (paginated) view
  */
@@ -137,9 +140,10 @@ function showAllDataView(viewRouting, viewManage, viewAllData) {
   viewManage.classList.add('hidden');
   viewAllData.classList.remove('hidden');
   App.currentPage = 1;
-  renderAllData();
+  // Load from API (falls back to local cache if unreachable)
+  loadAndRenderAllData();
 }
-
+ 
 // Expose globally
 window.switchTab = switchTab;
 window.routeToView = routeToView;
