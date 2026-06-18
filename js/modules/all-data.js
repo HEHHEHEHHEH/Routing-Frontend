@@ -3,21 +3,42 @@
    Pioneer Adhesives Routing Template System
 
    Displays all routing records with pagination.
-   Loads from API on init, falls back to mock-db.
+   Loads from API on init (limit=1000 to get all
+   records), falls back to mock-db on failure.
    ============================================ */
 
 /**
  * Load all records from API into local cache, then render.
+ * Passes limit=1000 (API max) to ensure we get all 491 entries.
  */
 async function loadAndRenderAllData() {
+  // Show a loading indicator
+  const tbody = document.getElementById('allDataTableBody');
+  if (tbody) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="5" class="p-6 text-center text-gray-500 italic">
+          Loading records from server...
+        </td>
+      </tr>`;
+  }
+
   try {
-    const res = await apiGetItems();
+    // Use limit=1000 (API max) so we retrieve every record, not just the default 50
+    const res = await apiGetItems('', 1000);
     if (res.ok && Array.isArray(res.data)) {
-      // Sync API response into local mock-db cache
+      // Sync API response into local mock-db cache using normalized fields
       res.data.forEach(item => {
         const key = (item.inventory_id || item.item_code || '').toUpperCase();
-        if (key) saveRoutingRecord(key, item);
+        if (!key) return;
+
+        // Normalize API item to internal format before caching
+        const normalized = _normalizeApiItem(item);
+        if (normalized) {
+          saveRoutingRecord(key, normalized);
+        }
       });
+      console.log(`[API] Loaded ${res.data.length} items into local cache.`);
     } else {
       console.warn('[API] Could not load items (status ' + res.status + '), using local cache.');
     }
@@ -56,12 +77,19 @@ function renderAllData() {
   } else {
     paginatedData.forEach(item => {
       const tr = document.createElement('tr');
-      const itemCode   = item.inventory_id || item.itemCode || 'N/A';
-      const skuDesc    = item.revision_descr || item.skuDesc || '';
-      const lineCode   = item.production_line_code || item.prodLine || '';
-      const productType = item.product_type || '';
-      const typeCode   = getTypeShortCode(productType);
-      const badgeClass = getTypeBadgeClass(productType);
+
+      // Support both internal and raw API field names
+      const itemCode    = item.inventory_id || item.itemCode || 'N/A';
+      const skuDesc     = item.revision_descr || item.skuDesc || '';
+      // production_line_code may come from fg or bm fields
+      const lineCode    = item.production_line_code
+                        || item.fg_production_line_code
+                        || item.bm_production_line_code
+                        || item.prodLine
+                        || '';
+      const productType  = item.product_type || '';
+      const typeCode    = getTypeShortCode(productType);
+      const badgeClass  = getTypeBadgeClass(productType);
 
       tr.innerHTML = `
         <td class="col-item-code">${sanitizeInput(itemCode)}</td>
@@ -69,7 +97,7 @@ function renderAllData() {
         <td>${sanitizeInput(lineCode)}</td>
         <td><span class="badge ${badgeClass}">${typeCode}</span></td>
         <td class="text-center">
-          <button onclick="viewFromAllData('${itemCode}')" class="link-action">
+          <button onclick="viewFromAllData('${sanitizeInput(itemCode)}')" class="link-action">
             View Details
           </button>
         </td>`;

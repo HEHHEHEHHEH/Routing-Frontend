@@ -37,18 +37,25 @@ async function initApp() {
     const res = await apiGetProductionLines();
     if (res.ok && Array.isArray(res.data)) {
       res.data.forEach(line => {
-        const code = line.line_code || line.code;
-        const desc = line.description || line.desc || code;
+        // API returns production_line_code and production_line_name
+        // apiGetProductionLines() normalizes these to code/line_code and description/desc
+        const code = line.production_line_code || line.line_code || line.code;
+        const desc = line.production_line_name  || line.description || line.desc || code;
+
         if (code) {
           LINE_DESCRIPTIONS[code] = desc;
-          if (Array.isArray(line.activities)) {
-            lineActivitiesDB[code] = line.activities.map(a => a.activity_name || a.name || a);
+
+          // Activities use activity_name field from API
+          if (Array.isArray(line.activities) && line.activities.length > 0) {
+            lineActivitiesDB[code] = line.activities.map(a =>
+              a.activity_name || a.name || String(a)
+            );
           } else if (!lineActivitiesDB[code]) {
             lineActivitiesDB[code] = [];
           }
         }
       });
-      console.log('[API] Production lines loaded from server.');
+      console.log(`[API] Production lines loaded: ${res.data.length} lines from server.`);
     } else {
       console.warn('[API] Could not load production lines, using local defaults.');
     }
@@ -112,3 +119,4 @@ document.addEventListener('keydown', handleKeyboardShortcuts);
 
 // Also expose init function globally for manual re-initialization
 window.initApp = initApp;
+window.populateProdLineSelect = populateProdLineSelect;

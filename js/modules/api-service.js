@@ -76,20 +76,26 @@ async function apiHealthCheck() {
 /**
  * GET /api/items
  * Browse / search item codes.
+ * Uses limit=1000 to fetch all records (API caps at 1000).
  * @param {string} [query] - Optional search query
+ * @param {number} [limit] - Max results (default 1000 to get all)
  */
-async function apiGetItems(query = '') {
-  const qs = query ? `?q=${encodeURIComponent(query)}` : '';
-  return _apiFetch(`/api/items${qs}`);
+async function apiGetItems(query = '', limit = 1000) {
+  const params = new URLSearchParams();
+  if (query) params.set('q', query);
+  params.set('limit', String(limit));
+  return _apiFetch(`/api/items?${params.toString()}`);
 }
 
 /**
  * POST /api/items
  * Create a new product with optional activities.
- * @param {Object} payload - { inventory_id, revision_descr, production_line_code, product_type, qty, activities[] }
+ * Maps internal field names to the API's expected schema.
+ * @param {Object} payload - Internal record object
  */
 async function apiCreateItem(payload) {
-  return _apiFetch('/api/items', 'POST', payload);
+  const body = _mapItemPayload(payload);
+  return _apiFetch('/api/items', 'POST', body);
 }
 
 /**
@@ -105,10 +111,11 @@ async function apiGetItem(itemCode) {
  * PATCH /api/items/{item_code}
  * Update product metadata. Revision is auto-incremented.
  * @param {string} itemCode
- * @param {Object} payload - Fields to update
+ * @param {Object} payload - Internal record object (fields to update)
  */
 async function apiUpdateItem(itemCode, payload) {
-  return _apiFetch(`/api/items/${encodeURIComponent(itemCode)}`, 'PATCH', payload);
+  const body = _mapItemPayload(payload);
+  return _apiFetch(`/api/items/${encodeURIComponent(itemCode)}`, 'PATCH', body);
 }
 
 /**
@@ -124,10 +131,21 @@ async function apiDeleteItem(itemCode) {
  * POST /api/items/{item_code}/activities
  * Add one new activity to a product.
  * @param {string} itemCode
- * @param {Object} activity - { activities, pax, machine, time_min }
+ * @param {Object} activity - { activity_name, pax, machine, time_min, ... }
  */
 async function apiAddItemActivity(itemCode, activity) {
-  return _apiFetch(`/api/items/${encodeURIComponent(itemCode)}/activities`, 'POST', activity);
+  // Map activities field to activity_name if needed
+  const body = {
+    activity_name: activity.activity_name || activity.activities || activity.name || '',
+    pax: activity.pax || 0,
+    machine: activity.machine || 0,
+    time_min: activity.time_min || 0,
+    type: activity.type || 'Labor',
+    item_id: activity.item_id || activity.activity_name || activity.activities || '',
+    class: activity.class || 'DL',
+    class_1: activity.class_1 || 'DL',
+  };
+  return _apiFetch(`/api/items/${encodeURIComponent(itemCode)}/activities`, 'POST', body);
 }
 
 /**
@@ -159,24 +177,153 @@ async function apiDeleteItemActivity(itemCode, activityId) {
 }
 
 /* ============================================
+   INTERNAL FIELD MAPPING HELPERS
+   ============================================ */
+
+/**
+ * Map our internal record format to the API's expected field names.
+ * API uses: inventory_id, revision_descr, product_type, quantity,
+ *           fg_production_line, fg_production_line_code,
+ *           bm_production_line, bm_production_line_code, notes, activities[]
+ * Each activity uses: activity_name (not "activities")
+ * @param {Object} record - Internal routing record
+ * @returns {Object} API-ready payload
+ */
+function _mapItemPayload(record) {
+  const isBM = record.product_type && record.product_type.includes('Base');
+
+  const body = {
+    inventory_id:   record.inventory_id || record.itemCode || '',
+    revision_descr: record.revision_descr || record.skuDesc || '',
+    product_type:   record.product_type || 'Finished Good (FG)',
+    quantity:       record.qty || record.quantity || 1,
+    notes:          record.notes || '',
+  };
+
+  // Map production line to correct FG/BM field based on product type
+  const lineCode = record.production_line_code || record.prodLine || '';
+  const lineName = record.production_line || LINE_DESCRIPTIONS[lineCode] || lineCode;
+
+  if (isBM) {
+    body.bm_production_line_code = lineCode;
+    body.bm_production_line      = lineName;
+    body.fg_production_line_code = null;
+    body.fg_production_line      = null;
+  } else {
+    body.fg_production_line_code = lineCode;
+    body.fg_production_line      = lineName;
+    body.bm_production_line_code = null;
+    body.bm_production_line      = null;
+  }
+
+  // Map activities — API expects "activity_name", not "activities"
+  if (Array.isArray(record.activities) && record.activities.length > 0) {
+    body.activities = record.activities.map((act, i) => ({
+      activity_name: act.activities || act.activity_name || act.name || '',
+      pax:        act.pax     || 0,
+      machine:    act.machine || 0,
+      time_min:   act.time_min || act.time || 0,
+      type:       act.type    || 'Labor',
+      item_id:    act.item_id || act.activities || act.activity_name || '',
+      class:      act.class   || 'DL',
+      class_1:    act.class_1 || 'DL',
+      sort_order: act.sort_order || (i + 1),
+    }));
+  }
+
+  return body;
+}
+
+/**
+ * Normalize an API item response to our internal format.
+ * API returns: fg_production_line_code, bm_production_line_code, quantity
+ * Internal uses: production_line_code, qty
+ * Also normalizes activity field: activity_name → activities
+ * @param {Object} apiItem
+ * @returns {Object} Normalized internal record
+ */
+function _normalizeApiItem(apiItem) {
+  if (!apiItem) return null;
+
+  // Determine production line: prefer FG, fall back to BM
+  const lineCode = apiItem.fg_production_line_code || apiItem.bm_production_line_code || '';
+  const lineName = apiItem.fg_production_line      || apiItem.bm_production_line      || lineCode;
+
+  const normalized = {
+    inventory_id:         apiItem.inventory_id,
+    revision_descr:       apiItem.revision_descr,
+    revision:             apiItem.revision,
+    notes:                apiItem.notes || '',
+    product_type:         apiItem.product_type || 'Finished Good (FG)',
+    qty:                  apiItem.quantity || 1,
+    production_line_code: lineCode,
+    production_line:      lineName,
+    // Keep raw API fields too for reference
+    fg_production_line_code: apiItem.fg_production_line_code,
+    bm_production_line_code: apiItem.bm_production_line_code,
+  };
+
+  // Normalize activities: map activity_name → activities for UI compatibility
+  if (Array.isArray(apiItem.activities)) {
+    normalized.activities = apiItem.activities.map(act => ({
+      id:           act.id,
+      activities:   act.activities || act.activity_name || act.name || '',
+      activity_name: act.activities || act.activity_name || act.name || '',
+      type:         act.type    || 'Labor',
+      item_id:      act.item_id || '',
+      class:        act.class   || 'DL',
+      pax:          act.pax     || 0,
+      machine:      act.machine || 0,
+      time_min:     act.time_min || 0,
+      sort_order:   act.sort_order || 0,
+    }));
+  } else {
+    normalized.activities = [];
+  }
+
+  return normalized;
+}
+
+/* ============================================
    PRODUCTION LINES
    ============================================ */
 
 /**
  * GET /api/production-lines
  * List all production lines and their activities.
+ * Normalizes response to internal format.
  */
 async function apiGetProductionLines() {
-  return _apiFetch('/api/production-lines');
+  const res = await _apiFetch('/api/production-lines');
+  if (res.ok && Array.isArray(res.data)) {
+    // Normalize field names: production_line_name → description/desc
+    res.data = res.data.map(line => ({
+      ...line,
+      // Expose as both "code" and "line_code" for compatibility
+      code:        line.production_line_code,
+      line_code:   line.production_line_code,
+      // Expose description under both keys
+      description: line.production_line_name,
+      desc:        line.production_line_name,
+      // Normalize activities
+      activities: Array.isArray(line.activities) ? line.activities : [],
+    }));
+  }
+  return res;
 }
 
 /**
  * POST /api/production-lines
  * Create a new production line.
- * @param {Object} payload - { line_code, description }
+ * @param {Object} payload - { line_code, description } (internal names)
  */
 async function apiCreateProductionLine(payload) {
-  return _apiFetch('/api/production-lines', 'POST', payload);
+  // Map to API field names
+  const body = {
+    production_line_code: payload.line_code || payload.production_line_code || '',
+    production_line_name: payload.description || payload.production_line_name || '',
+  };
+  return _apiFetch('/api/production-lines', 'POST', body);
 }
 
 /**
@@ -190,12 +337,16 @@ async function apiGetProductionLine(lineCode) {
 
 /**
  * PATCH /api/production-lines/{line_code}
- * Rename a production line (code and/or description).
+ * Rename a production line (name only per API spec).
  * @param {string} lineCode
  * @param {Object} payload - { new_line_code?, description? }
  */
 async function apiRenameProductionLine(lineCode, payload) {
-  return _apiFetch(`/api/production-lines/${encodeURIComponent(lineCode)}`, 'PATCH', payload);
+  // API PATCH only accepts production_line_name
+  const body = {
+    production_line_name: payload.description || payload.production_line_name || '',
+  };
+  return _apiFetch(`/api/production-lines/${encodeURIComponent(lineCode)}`, 'PATCH', body);
 }
 
 /**
@@ -205,7 +356,11 @@ async function apiRenameProductionLine(lineCode, payload) {
  * @param {Object} payload - { description, activities[] }
  */
 async function apiReplaceProductionLine(lineCode, payload) {
-  return _apiFetch(`/api/production-lines/${encodeURIComponent(lineCode)}`, 'PUT', payload);
+  const body = {
+    production_line_name: payload.description || payload.production_line_name || '',
+    activities: Array.isArray(payload.activities) ? payload.activities : [],
+  };
+  return _apiFetch(`/api/production-lines/${encodeURIComponent(lineCode)}`, 'PUT', body);
 }
 
 /**
@@ -221,13 +376,18 @@ async function apiDeleteProductionLine(lineCode) {
  * POST /api/production-lines/{line_code}/activities
  * Add a single activity to a production line.
  * @param {string} lineCode
- * @param {Object} activity - { name } or { activity_name }
+ * @param {Object} activity - { activity_name } or { name }
  */
 async function apiAddLineActivity(lineCode, activity) {
+  const body = {
+    activity_name: activity.activity_name || activity.name || '',
+  };
+  if (activity.sort_order !== undefined) body.sort_order = activity.sort_order;
+  if (activity.stage      !== undefined) body.stage      = activity.stage;
   return _apiFetch(
     `/api/production-lines/${encodeURIComponent(lineCode)}/activities`,
     'POST',
-    activity
+    body
   );
 }
 
@@ -280,3 +440,6 @@ window.apiDeleteProductionLine    = apiDeleteProductionLine;
 window.apiAddLineActivity         = apiAddLineActivity;
 window.apiUpdateLineActivity      = apiUpdateLineActivity;
 window.apiDeleteLineActivity      = apiDeleteLineActivity;
+// Internal helpers exposed for use in other modules
+window._normalizeApiItem          = _normalizeApiItem;
+window._mapItemPayload            = _mapItemPayload;

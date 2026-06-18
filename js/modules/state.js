@@ -71,8 +71,23 @@ const App = {
   isFormEditable: true
 };
 
+/**
+ * Tab Form State — persists unsaved form data when switching tabs.
+ * Keyed by AppState value (ADD, LOOKUP, UPDATE).
+ * Only the routing-form tabs need state saved; MANAGE and ALLDATA don't have input forms.
+ *
+ * Each entry holds:
+ *   { itemCode, skuDesc, qty, prodLine, mode, rows: [{activity, pax, machine, time, rawFormula}] }
+ */
+const TabFormState = {
+  [AppState.ADD]:    null,
+  [AppState.LOOKUP]: null,
+  [AppState.UPDATE]: null,
+};
+
 // Make available globally for module access
 window.LINE_DESCRIPTIONS = LINE_DESCRIPTIONS;
-window.AppState = AppState;
-window.TemplateMode = TemplateMode;
-window.App = App;
+window.AppState          = AppState;
+window.TemplateMode      = TemplateMode;
+window.App               = App;
+window.TabFormState      = TabFormState;

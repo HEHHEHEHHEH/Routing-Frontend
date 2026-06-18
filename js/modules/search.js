@@ -29,7 +29,8 @@ async function performSearch() {
   try {
     const res = await apiGetItem(query);
     if (res.ok && res.data) {
-      data = res.data;
+      // Normalize API response to internal field names
+      data = _normalizeApiItem(res.data);
       // Keep local cache in sync
       saveRoutingRecord(query, data);
     }
@@ -83,6 +84,6 @@ function quickSearch(itemCode) {
   performSearch();
 }
 
-window.performSearch       = performSearch;
+window.performSearch        = performSearch;
 window.handleSearchKeypress = handleSearchKeypress;
-window.quickSearch         = quickSearch;
+window.quickSearch          = quickSearch;
