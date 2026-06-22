@@ -261,12 +261,15 @@ async function saveRoutingDocument() {
   // --- Clear saved tab state for this tab after a successful save ---
   clearTabFormState(App.currentState);
 
-  await showModal({
-    icon:         'info',
-    title:        'Routing Document ' + (action.charAt(0).toUpperCase() + action.slice(1)),
-    message:      'Routing document ' + action + ' successfully!\n\nItem Code: ' + itemCode + '\nSKU: ' + skuDesc + '\nLine: ' + prodLine,
-    type:         'confirm',
-    confirmLabel: 'OK',
+  // Determine friendly action label
+  const actionLabel = App.currentState === AppState.UPDATE ? 'Updated' : 'Added';
+  const actionVerb  = App.currentState === AppState.UPDATE ? 'updated' : 'saved';
+
+  showToast({
+    type:    'success',
+    title:   `Successfully ${actionLabel}`,
+    message: `${itemCode} — ${skuDesc} (Line: ${prodLine}) has been ${actionVerb}.`,
+    duration: 4000,
   });
 }
 

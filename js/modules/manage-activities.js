@@ -208,6 +208,118 @@ function showDualInputModal(opts) {
 }
 
 
+/* ============================================
+   TOAST NOTIFICATION SYSTEM
+   Non-blocking success/error/info popups that
+   auto-dismiss after a short delay.
+   ============================================ */
+
+/**
+ * Show a toast notification popup.
+ * @param {Object} opts
+ * @param {'success'|'error'|'info'|'warn'} opts.type
+ * @param {string} opts.title       - Bold headline
+ * @param {string} opts.message     - Supporting detail (optional)
+ * @param {number} [opts.duration]  - Auto-dismiss ms (default 3500)
+ */
+function showToast(opts) {
+  // Ensure container exists
+  let container = document.getElementById('toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toast-container';
+    container.style.cssText = [
+      'position:fixed',
+      'bottom:1.25rem',
+      'right:1.25rem',
+      'z-index:99999',
+      'display:flex',
+      'flex-direction:column-reverse',
+      'gap:0.6rem',
+      'pointer-events:none',
+    ].join(';');
+    document.body.appendChild(container);
+  }
+
+  // Color palette per type
+  const palette = {
+    success: { bg: '#f0fdf4', border: '#86efac', icon: '✓', iconBg: '#dcfce7', iconColor: '#16a34a', titleColor: '#15803d' },
+    error:   { bg: '#fff1f2', border: '#fca5a5', icon: '✕', iconBg: '#fee2e2', iconColor: '#dc2626', titleColor: '#b91c1c' },
+    warn:    { bg: '#fffbeb', border: '#fde68a', icon: '!', iconBg: '#fef9c3', iconColor: '#d97706', titleColor: '#b45309' },
+    info:    { bg: '#eff6ff', border: '#93c5fd', icon: 'i', iconBg: '#dbeafe', iconColor: '#2563eb', titleColor: '#1d4ed8' },
+  };
+  const p = palette[opts.type] || palette.info;
+  const duration = opts.duration || 3500;
+
+  // Build toast element
+  const toast = document.createElement('div');
+  toast.style.cssText = [
+    `background:${p.bg}`,
+    `border:1.5px solid ${p.border}`,
+    'border-radius:12px',
+    'padding:0.9rem 1.1rem',
+    'min-width:280px',
+    'max-width:360px',
+    'display:flex',
+    'align-items:flex-start',
+    'gap:0.75rem',
+    'box-shadow:0 8px 24px rgba(0,0,0,0.10)',
+    'pointer-events:all',
+    'transform:translateY(120%)',
+    'transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1), opacity 0.25s ease',
+    'opacity:0',
+    'cursor:default',
+  ].join(';');
+
+  toast.innerHTML = `
+    <div style="flex-shrink:0;width:32px;height:32px;border-radius:50%;background:${p.iconBg};
+                display:flex;align-items:center;justify-content:center;
+                font-size:0.95rem;font-weight:800;color:${p.iconColor};font-style:normal;">
+      ${p.icon}
+    </div>
+    <div style="flex:1;min-width:0;">
+      <p style="margin:0 0 ${opts.message ? '0.2rem' : '0'};font-size:0.875rem;font-weight:700;color:${p.titleColor};line-height:1.3;">
+        ${opts.title || ''}
+      </p>
+      ${opts.message ? `<p style="margin:0;font-size:0.8rem;color:#475569;line-height:1.45;">${opts.message}</p>` : ''}
+    </div>
+    <button style="flex-shrink:0;background:none;border:none;cursor:pointer;font-size:1rem;color:#94a3b8;
+                   line-height:1;padding:0.1rem 0.3rem;border-radius:4px;align-self:flex-start;"
+            onmouseover="this.style.color='#475569'" onmouseout="this.style.color='#94a3b8'"
+            onclick="this.closest('[data-toast]').remove()">
+      &times;
+    </button>
+  `;
+  toast.setAttribute('data-toast', '1');
+  container.appendChild(toast);
+
+  // Slide up
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      toast.style.transform = 'translateY(0)';
+      toast.style.opacity   = '1';
+    });
+  });
+
+  // Auto-dismiss
+  const timer = setTimeout(() => _dismissToast(toast), duration);
+
+  // Click to dismiss early
+  toast.addEventListener('click', () => {
+    clearTimeout(timer);
+    _dismissToast(toast);
+  });
+}
+
+function _dismissToast(toast) {
+  toast.style.transform = 'translateY(120%)';
+  toast.style.opacity   = '0';
+  setTimeout(() => toast.remove(), 300);
+}
+
+window.showToast = showToast;
+
+
 /**
  * Initialize the production line dropdown
  */
@@ -391,6 +503,7 @@ async function handleCreateLine() {
   // Sync the production line dropdown on all routing tabs immediately (no refresh needed)
   if (typeof populateProdLineSelect === 'function') populateProdLineSelect();
   initManageLines(cleanCode);
+  showToast({ type: 'success', title: 'Production Line Created', message: `"${cleanCode}" has been added successfully.` });
 }
 
 async function handleEditLine() {
@@ -470,6 +583,7 @@ async function handleEditLine() {
   // Sync the production line dropdown on all routing tabs immediately (no refresh needed)
   if (typeof populateProdLineSelect === 'function') populateProdLineSelect();
   initManageLines(newCode);
+  showToast({ type: 'success', title: 'Production Line Updated', message: `Line "${newCode}" has been saved successfully.` });
 }
 
 async function handleDeleteLine() {
@@ -498,6 +612,7 @@ async function handleDeleteLine() {
   if (typeof populateProdLineSelect === 'function') populateProdLineSelect();
   initManageLines();
   renderManageActivities();
+  showToast({ type: 'success', title: 'Production Line Deleted', message: `"${selectedLine}" and its activities have been removed.` });
 }
 
 
@@ -532,6 +647,7 @@ async function addActivityToLine() {
   addLineActivity(selectedLine, newAct);
   input.value = '';
   renderManageActivities();
+  showToast({ type: 'success', title: 'Activity Added', message: `"${newAct}" added to line ${selectedLine}.` });
 }
 
 async function deleteActivity(line, index) {
@@ -557,6 +673,7 @@ async function deleteActivity(line, index) {
   // Keep local cache in sync
   removeLineActivity(line, index);
   renderManageActivities();
+  showToast({ type: 'success', title: 'Activity Deleted', message: `"${targetAct}" has been removed.` });
 }
 
 async function updateActivityName(line, index, inputElement, originalValue) {
@@ -596,6 +713,7 @@ async function updateActivityName(line, index, inputElement, originalValue) {
       // Keep local cache in sync
       updateLineActivity(line, index, newValue);
       renderManageActivities();
+      showToast({ type: 'success', title: 'Activity Renamed', message: `"${originalValue}" → "${newValue}"` });
     } else {
       inputElement.value = originalValue;
     }

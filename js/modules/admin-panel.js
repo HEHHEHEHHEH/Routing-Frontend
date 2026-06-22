@@ -137,6 +137,7 @@ async function handleCreateUser() {
       _showCreateUserSuccess(
         `Account "${data.username || username}" created successfully with role "${data.role || role}".`
       );
+      showToast({ type: 'success', title: 'User Account Created', message: `"${data.username || username}" (${data.role || role}) has been added.` });
       _resetCreateUserForm();
     } else {
       // API error

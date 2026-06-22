@@ -25,10 +25,15 @@ async function loadAndRenderAllData() {
 
   try {
     // Use limit=1000 (API max) so we retrieve every record, not just the default 50
+    // API response shape: { total, limit, offset, results: [...] }
     const res = await apiGetItems('', 1000);
-    if (res.ok && Array.isArray(res.data)) {
+    const items = res.ok && res.data && Array.isArray(res.data.results)
+      ? res.data.results
+      : null;
+
+    if (items) {
       // Sync API response into local mock-db cache using normalized fields
-      res.data.forEach(item => {
+      items.forEach(item => {
         const key = (item.inventory_id || item.item_code || '').toUpperCase();
         if (!key) return;
 
@@ -38,7 +43,7 @@ async function loadAndRenderAllData() {
           saveRoutingRecord(key, normalized);
         }
       });
-      console.log(`[API] Loaded ${res.data.length} items into local cache.`);
+      console.log(`[API] Loaded ${items.length} items into local cache. (API total: ${res.data.total})`);
     } else {
       console.warn('[API] Could not load items (status ' + res.status + '), using local cache.');
     }

@@ -133,6 +133,8 @@ async function handleDeleteItem() {
     statusLabel.textContent = `Record "${itemCode}" deleted successfully.`;
     statusLabel.className = 'search-status search-status--success';
   }
+
+  showToast({ type: 'success', title: 'Successfully Deleted', message: `Routing record "${itemCode}" has been permanently removed.` });
 }
 
 /**

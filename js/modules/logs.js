@@ -18,7 +18,7 @@
  */
 const LogsState = {
   page:     1,
-  per_page: 50,
+  per_page: 20,
   total:    0,
   totalPages: 0,
   filters:  {},
@@ -63,7 +63,7 @@ function initAuditLogs() {
 
   // Reset per-page select
   const perPageEl = document.getElementById('log-per-page');
-  if (perPageEl) perPageEl.value = '50';
+  if (perPageEl) perPageEl.value = '20';
 
   // Load first page
   loadAuditLogs();
@@ -80,7 +80,6 @@ async function loadAuditLogs() {
   if (!Auth.isAdmin()) return;
 
   const tbody = document.getElementById('auditLogsTableBody');
-  const paginationInfo = document.getElementById('logs-pagination-info');
 
   // Show loading in the table
   if (tbody) {
@@ -105,9 +104,10 @@ async function loadAuditLogs() {
 
     if (res.ok && res.data) {
       const data = res.data;
-      LogsState.total       = data.total       || 0;
-      LogsState.totalPages  = data.total_pages || 1;
-      LogsState.logs        = Array.isArray(data.logs) ? data.logs : [];
+      // README: response shape is { page, per_page, total, total_pages, logs: [...] }
+      LogsState.total      = data.total       || 0;
+      LogsState.totalPages = data.total_pages  || 1;
+      LogsState.logs       = Array.isArray(data.logs) ? data.logs : [];
 
       renderAuditLogs();
       renderLogsPagination();
@@ -125,7 +125,10 @@ async function loadAuditLogs() {
             </td>
           </tr>`;
       }
-      if (paginationInfo) paginationInfo.textContent = '0 entries';
+      LogsState.total      = 0;
+      LogsState.totalPages = 1;
+      LogsState.logs       = [];
+      renderLogsPagination();
     }
   } catch (err) {
     if (tbody) {
@@ -136,7 +139,10 @@ async function loadAuditLogs() {
           </td>
         </tr>`;
     }
-    if (paginationInfo) paginationInfo.textContent = '0 entries';
+    LogsState.total      = 0;
+    LogsState.totalPages = 1;
+    LogsState.logs       = [];
+    renderLogsPagination();
   }
 }
 
