@@ -2,8 +2,11 @@
    TABS.JS - Tab Controller & Router
    Pioneer Adhesives Routing Template System
    
-   Manages switching between the 5 main views:
-   ADD, LOOKUP, UPDATE, MANAGE, ALLDATA
+   Manages switching between the 7 main views:
+   ADD, LOOKUP, UPDATE, MANAGE, ALLDATA, ADMIN, LOGS
+
+   Admin-only tabs (ADMIN, LOGS) are conditionally
+   rendered based on the user's role.
 
    Tab form state is persisted across switches:
    - Before leaving a routing tab, form data is
@@ -20,7 +23,17 @@ const TAB_ELEMENTS = {
   [AppState.LOOKUP]:  'tab-lookup',
   [AppState.UPDATE]:  'tab-update',
   [AppState.MANAGE]:  'tab-manage',
-  [AppState.ALLDATA]: 'tab-alldata'
+  [AppState.ALLDATA]: 'tab-alldata',
+  [AppState.ADMIN]:   'tab-admin',
+  [AppState.LOGS]:    'tab-logs'
+};
+
+/**
+ * View ID to DOM element ID mapping
+ */
+const VIEW_ELEMENTS = {
+  [AppState.ADMIN]: 'view-admin',
+  [AppState.LOGS]:  'view-logs'
 };
 
 /**
@@ -31,6 +44,35 @@ const TAB_ELEMENTS = {
  */
 function switchTab(tabId) {
   const previousState = App.currentState;
+  const role = (Auth.getUser() || {}).role || '';
+
+  // --- Guard: admin-only tabs ---
+  if ((tabId === AppState.ADMIN || tabId === AppState.LOGS) && role !== 'admin') {
+    showModal({
+      icon: 'danger',
+      title: 'Access Denied',
+      message: 'You do not have permission to access this page. Admin role is required.',
+      type: 'confirm',
+      confirmLabel: 'OK',
+    });
+    return;
+  }
+
+  // --- Guard: routing/data tabs are not available to admin ---
+  const routingStates = [
+    AppState.ADD, AppState.LOOKUP, AppState.UPDATE,
+    AppState.MANAGE, AppState.ALLDATA
+  ];
+  if (role === 'admin' && routingStates.includes(tabId)) {
+    tabId = AppState.ADMIN;
+  }
+
+  // --- Guard: user role may only access Lookup and All Data ---
+  const userAllowedStates = [AppState.LOOKUP, AppState.ALLDATA];
+  if (role === 'user' && !userAllowedStates.includes(tabId)) {
+    // Silently redirect to Lookup (their default landing tab)
+    tabId = AppState.LOOKUP;
+  }
 
   // --- Save current tab form state before leaving ---
   // Only save routing form tabs (ADD/LOOKUP/UPDATE) and only when leaving them
@@ -72,6 +114,15 @@ function routeToView(state, previousState) {
   const viewRouting = document.getElementById('view-routing');
   const viewManage  = document.getElementById('view-manage');
   const viewAllData = document.getElementById('view-alldata');
+  const viewAdmin   = document.getElementById('view-admin');
+  const viewLogs    = document.getElementById('view-logs');
+
+  // Hide all views first
+  if (viewRouting) viewRouting.classList.add('hidden');
+  if (viewManage)  viewManage.classList.add('hidden');
+  if (viewAllData) viewAllData.classList.add('hidden');
+  if (viewAdmin)   viewAdmin.classList.add('hidden');
+  if (viewLogs)    viewLogs.classList.add('hidden');
 
   switch (state) {
     case AppState.ADD:
@@ -88,6 +139,12 @@ function routeToView(state, previousState) {
       break;
     case AppState.ALLDATA:
       showAllDataView(viewRouting, viewManage, viewAllData);
+      break;
+    case AppState.ADMIN:
+      showAdminView(viewAdmin);
+      break;
+    case AppState.LOGS:
+      showLogsView(viewLogs);
       break;
     default:
       console.warn('Unknown tab state:', state);
@@ -220,6 +277,30 @@ function showAllDataView(viewRouting, viewManage, viewAllData) {
 }
 
 /**
+ * Show the Admin Panel view (admin only)
+ */
+function showAdminView(viewAdmin) {
+  if (!Auth.isAdmin()) {
+    switchTab(AppState.ADD);
+    return;
+  }
+  viewAdmin.classList.remove('hidden');
+  initAdminPanel();
+}
+
+/**
+ * Show the Audit Logs view (admin only)
+ */
+function showLogsView(viewLogs) {
+  if (!Auth.isAdmin()) {
+    switchTab(AppState.ADD);
+    return;
+  }
+  viewLogs.classList.remove('hidden');
+  initAuditLogs();
+}
+
+/**
  * Show or hide the notes field (visible in UPDATE/LOOKUP, hidden in ADD).
  * @param {boolean} visible
  */
@@ -251,5 +332,7 @@ function _setLookupDisplayVisible(showLookup) {
 // Expose globally
 window.switchTab    = switchTab;
 window.routeToView  = routeToView;
+window.showAdminView = showAdminView;
+window.showLogsView  = showLogsView;
 window._setNotesVisible         = _setNotesVisible;
 window._setLookupDisplayVisible = _setLookupDisplayVisible;

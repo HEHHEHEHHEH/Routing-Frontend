@@ -97,7 +97,134 @@
       td.bg-activity-green .activity-label {
         display: none;
       }
+
+      /* ============================================
+         ADMIN PANEL & LOGS SHARED STYLES
+         ============================================ */
+      .admin-section {
+        background: #ffffff;
+        border-radius: 10px;
+        border: 1px solid #e2e8f0;
+        overflow: hidden;
+      }
+      .admin-section__header {
+        background: #f8fafc;
+        border-bottom: 1px solid #e2e8f0;
+        padding: 0.9rem 1.25rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .admin-section__title {
+        font-size: 0.875rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin: 0;
+      }
+      .admin-section__body {
+        padding: 1.25rem;
+      }
+      .admin-input {
+        width: 100%;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        padding: 0.55rem 0.8rem;
+        font-size: 0.875rem;
+        color: #0f172a;
+        background: #ffffff;
+        box-sizing: border-box;
+        outline: none;
+        transition: border-color 0.15s;
+      }
+      .admin-input:focus {
+        border-color: #3b82f6;
+      }
+      .admin-label {
+        display: block;
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.35rem;
+        letter-spacing: 0.02em;
+      }
+      .admin-btn {
+        padding: 0.6rem 1.2rem;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 700;
+        border: none;
+        cursor: pointer;
+        transition: background 0.15s;
+      }
+      .admin-btn--primary {
+        background: #2563eb;
+        color: #fff;
+      }
+      .admin-btn--primary:hover {
+        background: #1d4ed8;
+      }
+      .admin-btn--primary:disabled {
+        background: #93c5fd;
+        cursor: not-allowed;
+      }
+      .admin-btn--danger {
+        background: #dc2626;
+        color: #fff;
+      }
+      .admin-btn--danger:hover {
+        background: #b91c1c;
+      }
+      .admin-btn--secondary {
+        background: #f1f5f9;
+        color: #374151;
+        border: 1px solid #e2e8f0;
+      }
+      .admin-btn--secondary:hover {
+        background: #e2e8f0;
+      }
+      .admin-alert {
+        border-radius: 8px;
+        padding: 0.6rem 0.85rem;
+        font-size: 0.82rem;
+        line-height: 1.45;
+        display: none;
+      }
+      .admin-alert--error {
+        background: #fff1f2;
+        border: 1px solid #fecdd3;
+        color: #be123c;
+      }
+      .admin-alert--success {
+        background: #ecfdf5;
+        border: 1px solid #a7f3d0;
+        color: #059669;
+      }
+      .admin-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .admin-table thead th {
+        background: #f8fafc;
+        border-bottom: 1px solid #e2e8f0;
+        padding: 0.6rem 0.75rem;
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #64748b;
+        text-align: left;
+      }
+      .admin-table tbody td {
+        padding: 0.6rem 0.75rem;
+        border-bottom: 1px solid #f1f5f9;
+        font-size: 0.82rem;
+        color: #334155;
+      }
+      .admin-table tbody tr:hover td {
+        background: #f8fafc;
+      }
     </style>
+<base target="_blank">
 </head>
 <body>
 
@@ -119,7 +246,7 @@
     </header>
 
     <!-- ============================================
-         NAVIGATION TABS (5 Main Views)
+         NAVIGATION TABS (7 Main Views)
          ============================================ -->
     <nav class="nav-tabs">
       <button id="tab-add"
@@ -146,6 +273,19 @@
               onclick="switchTab('ALLDATA')"
               class="nav-tab nav-tab--inactive">
         View All Data
+      </button>
+      <!-- Admin-only tabs (hidden by default, shown via JS for admin users) -->
+      <button id="tab-admin"
+              onclick="switchTab('ADMIN')"
+              class="nav-tab nav-tab--inactive"
+              style="display:none;">
+        &#9881; Admin Panel
+      </button>
+      <button id="tab-logs"
+              onclick="switchTab('LOGS')"
+              class="nav-tab nav-tab--inactive"
+              style="display:none;">
+        &#128203; Audit Logs
       </button>
     </nav>
 
@@ -582,6 +722,258 @@
       </div>
     </div>
 
+    <!-- ============================================
+         VIEW 6: ADMIN PANEL
+         Admin-only user management
+         ============================================ -->
+    <div id="view-admin" class="hidden">
+
+      <!-- Page Header -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <div>
+          <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--gray-800); margin: 0 0 0.2rem;">Admin Panel</h3>
+          <p style="font-size: 0.82rem; color: #64748b; margin: 0;">System administration and user account management.</p>
+        </div>
+        <span style="display: inline-flex; align-items: center; gap: 0.35rem; background-color: #fef2f2; color: #dc2626; padding: 0.3rem 0.85rem; border-radius: 9999px; font-size: 0.78rem; font-weight: 600; border: 1px solid #fecaca; letter-spacing: 0.01em;">
+          &#9881; Admin Only
+        </span>
+      </div>
+
+      <!-- Admin Info Bar -->
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1.5rem;">
+        <div>
+          <p style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #94a3b8; margin: 0 0 0.2rem;">Signed in as</p>
+          <p style="font-size: 0.95rem; font-weight: 600; color: #1e293b; margin: 0;">
+            <span id="admin-current-name">--</span>
+            <span id="admin-current-role" style="font-size: 0.72rem; background: #fef2f2; color: #dc2626; padding: 0.1rem 0.5rem; border-radius: 9999px; font-weight: 600; border: 1px solid #fecaca; margin-left: 0.4rem;">--</span>
+          </p>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+
+        <!-- LEFT: Create User Account -->
+        <div class="admin-section">
+          <div class="admin-section__header">
+            <p class="admin-section__title">Create New User Account</p>
+          </div>
+          <div class="admin-section__body">
+
+            <!-- Error message -->
+            <div id="create-user-error" class="admin-alert admin-alert--error" style="margin-bottom: 1rem;"></div>
+            <!-- Success message -->
+            <div id="create-user-success" class="admin-alert admin-alert--success" style="margin-bottom: 1rem;"></div>
+
+            <form onsubmit="event.preventDefault(); handleCreateUser();" style="display: flex; flex-direction: column; gap: 0.9rem;">
+
+              <div>
+                <label class="admin-label" for="new-username">Username</label>
+                <input type="text" id="new-username" class="admin-input" placeholder="Enter username (3-50 characters)" autocomplete="off">
+              </div>
+
+              <div>
+                <label class="admin-label" for="new-password">Password</label>
+                <div style="display: flex; gap: 0.4rem;">
+                  <input type="password" id="new-password" class="admin-input" placeholder="Minimum 8 characters" style="flex: 1;">
+                  <button type="button" onclick="togglePasswordVisibility('new-password', this)"
+                          style="padding: 0.4rem 0.7rem; border-radius: 6px; border: 1px solid #d1d5db; background: #f8fafc; color: #64748b; font-size: 0.75rem; font-weight: 600; cursor: pointer; white-space: nowrap;">
+                    Show
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label class="admin-label" for="new-password-confirm">Confirm Password</label>
+                <div style="display: flex; gap: 0.4rem;">
+                  <input type="password" id="new-password-confirm" class="admin-input" placeholder="Re-enter password" style="flex: 1;">
+                  <button type="button" onclick="togglePasswordVisibility('new-password-confirm', this)"
+                          style="padding: 0.4rem 0.7rem; border-radius: 6px; border: 1px solid #d1d5db; background: #f8fafc; color: #64748b; font-size: 0.75rem; font-weight: 600; cursor: pointer; white-space: nowrap;">
+                    Show
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label class="admin-label" for="new-user-role">Role</label>
+                <select id="new-user-role" class="admin-input">
+                  <option value="user" selected>User (Read-Only)</option>
+                  <option value="superuser">Superuser (Read + Write)</option>
+                  <option value="admin">Admin (Full Access)</option>
+                </select>
+              </div>
+
+              <div style="margin-top: 0.4rem;">
+                <button type="submit" id="btn-create-user" class="admin-btn admin-btn--primary" style="width: 100%;">
+                  Create Account
+                </button>
+              </div>
+
+            </form>
+
+          </div>
+        </div>
+
+        <!-- RIGHT: Role Permissions Info -->
+        <div class="admin-section">
+          <div class="admin-section__header">
+            <p class="admin-section__title">Role Permissions Reference</p>
+          </div>
+          <div class="admin-section__body" style="padding: 0;">
+
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Role</th>
+                  <th>Permissions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <span style="display: inline-block; font-size: 0.72rem; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 9999px; background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0;">USER</span>
+                  </td>
+                  <td>Read-only access. Can view routing data, search, and browse records. Cannot create, edit, or delete.</td>
+                </tr>
+                <tr>
+                  <td>
+                    <span style="display: inline-block; font-size: 0.72rem; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 9999px; background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd;">SUPERUSER</span>
+                  </td>
+                  <td>Read and write access. Can create, update, and delete routing records and production lines. Cannot manage users or view audit logs.</td>
+                </tr>
+                <tr>
+                  <td>
+                    <span style="display: inline-block; font-size: 0.72rem; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 9999px; background: #fef2f2; color: #dc2626; border: 1px solid #fecaca;">ADMIN</span>
+                  </td>
+                  <td>Full access. Can do everything a Superuser can, plus: create user accounts, view audit logs, and clean up old log entries.</td>
+                </tr>
+              </tbody>
+            </table>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ============================================
+         VIEW 7: AUDIT LOGS
+         Admin-only audit log viewer
+         ============================================ -->
+    <div id="view-logs" class="hidden">
+
+      <!-- Page Header -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <div>
+          <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--gray-800); margin: 0 0 0.2rem;">Audit Logs</h3>
+          <p style="font-size: 0.82rem; color: #64748b; margin: 0;">View and manage system audit log entries.</p>
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+          <button onclick="handleLogsCleanup()"
+                  class="admin-btn admin-btn--danger">
+            &#128465; Cleanup Old Logs
+          </button>
+        </div>
+      </div>
+
+      <!-- Filters Bar -->
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 1rem 1.25rem; margin-bottom: 1.5rem;">
+        <p style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #94a3b8; margin: 0 0 0.7rem;">Filters</p>
+        <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.75rem; align-items: end;">
+          <div>
+            <label class="admin-label" for="log-filter-username">Username</label>
+            <input type="text" id="log-filter-username" class="admin-input" placeholder="e.g., alice_smith">
+          </div>
+          <div>
+            <label class="admin-label" for="log-filter-action">Action</label>
+            <input type="text" id="log-filter-action" class="admin-input" placeholder="e.g., Updated product">
+          </div>
+          <div>
+            <label class="admin-label" for="log-filter-target">Target Type</label>
+            <select id="log-filter-target" class="admin-input">
+              <option value="">-- All --</option>
+              <option value="product">Product</option>
+              <option value="activity">Activity</option>
+              <option value="user">User</option>
+              <option value="logs">Logs</option>
+            </select>
+          </div>
+          <div>
+            <label class="admin-label" for="log-filter-from">From Date</label>
+            <input type="date" id="log-filter-from" class="admin-input">
+          </div>
+          <div>
+            <label class="admin-label" for="log-filter-to">To Date</label>
+            <input type="date" id="log-filter-to" class="admin-input">
+          </div>
+        </div>
+        <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem; justify-content: flex-end;">
+          <button onclick="clearLogFilters()" class="admin-btn admin-btn--secondary">
+            Clear Filters
+          </button>
+          <button onclick="applyLogFilters()" class="admin-btn admin-btn--primary">
+            Apply Filters
+          </button>
+        </div>
+      </div>
+
+      <!-- Logs Table -->
+      <div class="admin-section" style="margin-bottom: 1rem;">
+        <div class="admin-section__body" style="padding: 0; overflow-x: auto;">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Timestamp</th>
+                <th>User</th>
+                <th>Action</th>
+                <th>Description</th>
+                <th>Target</th>
+                <th>Target ID</th>
+                <th>IP Address</th>
+              </tr>
+            </thead>
+            <tbody id="auditLogsTableBody">
+              <!-- Populated by logs.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <span class="pagination-info" id="logs-pagination-info">
+            Showing 0 to 0 of 0 entries
+          </span>
+          <div style="display: flex; align-items: center; gap: 0.4rem;">
+            <label style="font-size: 0.78rem; color: #64748b; font-weight: 500;">Per page:</label>
+            <select id="log-per-page" onchange="changeLogsPerPage()"
+                    style="border: 1px solid #cbd5e1; border-radius: 6px; padding: 0.3rem 0.5rem; font-size: 0.78rem; color: #374151; background: #fff;">
+              <option value="25">25</option>
+              <option value="50" selected>50</option>
+              <option value="100">100</option>
+              <option value="200">200</option>
+            </select>
+          </div>
+        </div>
+        <div class="pagination-buttons">
+          <button onclick="changeLogsPage(-1)"
+                  id="btn-logs-prev"
+                  class="btn btn--secondary"
+                  disabled>
+            Previous
+          </button>
+          <button onclick="changeLogsPage(1)"
+                  id="btn-logs-next"
+                  class="btn btn--secondary"
+                  disabled>
+            Next
+          </button>
+        </div>
+      </div>
+
+    </div>
+
   </div>
 
   <!-- ============================================
@@ -611,24 +1003,32 @@
   <script src="js/modules/manage-activities.js"></script>
   <script src="js/modules/all-data.js"></script>
 
-  <!-- Layer 5: Router & Entry Point -->
+  <!-- Layer 5: Admin Modules (admin only, but scripts load for all) -->
+  <script src="js/modules/admin-panel.js"></script>
+  <script src="js/modules/logs.js"></script>
+
+  <!-- Layer 6: Router & Entry Point -->
   <script src="js/modules/tabs.js"></script>
   <script src="js/main.js"></script>
 
   <!-- 
     JS Module Hierarchy:
     main.js
-    ├── modules/api-service.js         - Backend API client (all endpoints)
-    ├── modules/state.js              - App state, constants, enums
-    ├── modules/mock-db.js            - In-memory data store
-    ├── modules/utils.js              - Helper functions
-    ├── modules/calculations.js       - Math engine
-    ├── modules/view-controller.js    - View state manager
-    ├── modules/routing-form.js       - Form handling
-    ├── modules/search.js             - Search engine
-    ├── modules/manage-activities.js  - Activity CRUD
-    ├── modules/all-data.js           - Paginated table view
-    └── modules/tabs.js               - Tab controller/router
+    ├── modules/auth.js              - Authentication manager (login/logout/JWT)
+    ├── modules/api-service.js       - Backend API client (all endpoints + loading)
+    ├── modules/state.js             - App state, constants, enums
+    ├── modules/mock-db.js           - In-memory data store
+    ├── modules/utils.js             - Helper functions
+    ├── modules/calculations.js      - Math engine
+    ├── modules/view-controller.js   - View state manager
+    ├── modules/routing-form.js      - Form handling
+    ├── modules/search.js            - Search engine
+    ├── modules/manage-activities.js - Activity CRUD
+    ├── modules/all-data.js          - Paginated table view
+    ├── modules/admin-panel.js       - Admin panel (user management)
+    ├── modules/logs.js              - Audit logs viewer
+    ├── modules/tabs.js              - Tab controller/router
+    └── main.js                      - Entry point
   -->
 
 </body>

@@ -10,6 +10,11 @@
    --- Health ---
    GET  /api/health
 
+   --- Auth ---
+   POST /api/auth/login
+   GET  /api/auth/me
+   POST /api/auth/register (admin only)
+
    --- Items ---
    GET    /api/items                              Browse / search item codes
    POST   /api/items                              Create a new product
@@ -30,45 +35,143 @@
    POST   /api/production-lines/{line_code}/activities       Add one activity to a line
    PATCH  /api/production-lines/{line_code}/activities/{id}  Update one line activity
    DELETE /api/production-lines/{line_code}/activities/{id}  Remove one line activity
+
+   --- Logs (Admin Only) ---
+   GET    /api/logs                                         List audit log entries
+   DELETE /api/logs/cleanup                                 Purge old log entries
    ============================================ */
 
 const API_BASE_URL = 'http://192.168.50.59:5000'; // Change to your server URL
 
+/* ============================================
+   LOADING ANIMATION SYSTEM
+   ============================================ */
+
+/**
+ * Show the loading overlay spinner.
+ * Call this before every API request.
+ */
+function showLoading(message) {
+  let overlay = document.getElementById('api-loading-overlay');
+  if (!overlay) {
+    // Create the overlay if it doesn't exist
+    overlay = document.createElement('div');
+    overlay.id = 'api-loading-overlay';
+    overlay.style.cssText = [
+      'position:fixed', 'inset:0', 'z-index:99999',
+      'display:flex', 'align-items:center', 'justify-content:center',
+      'flex-direction:column', 'gap:1rem',
+      'background:rgba(15,23,42,0.65)', 'backdrop-filter:blur(4px)',
+      '-webkit-backdrop-filter:blur(4px)',
+      'transition:opacity 0.2s ease'
+    ].join(';');
+
+    overlay.innerHTML = `
+      <div style="position:relative;width:56px;height:56px;">
+        <div style="position:absolute;inset:0;border:4px solid rgba(255,255,255,0.15);border-radius:50%;"></div>
+        <div style="position:absolute;inset:0;border:4px solid transparent;border-top-color:#3b82f6;border-radius:50%;
+                    animation:apiSpinner 0.8s linear infinite;"></div>
+      </div>
+      <span id="api-loading-message" style="color:#e2e8f0;font-size:0.9rem;font-weight:500;letter-spacing:0.02em;"></span>
+      <style>@keyframes apiSpinner{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}</style>
+    `;
+    document.body.appendChild(overlay);
+  }
+
+  const msgEl = document.getElementById('api-loading-message');
+  if (msgEl) msgEl.textContent = message || 'Loading...';
+
+  overlay.style.display = 'flex';
+  overlay.style.opacity = '1';
+}
+
+/**
+ * Hide the loading overlay spinner.
+ * Call this after every API request completes (success or error).
+ */
+function hideLoading() {
+  const overlay = document.getElementById('api-loading-overlay');
+  if (overlay) {
+    overlay.style.opacity = '0';
+    setTimeout(() => { overlay.style.display = 'none'; }, 200);
+  }
+}
+
 /**
  * Internal helper — perform a fetch request and return parsed JSON.
+ * Automatically shows/hides the loading animation.
  * @param {string} path - API path (e.g. '/api/items')
  * @param {string} method - HTTP method
  * @param {Object|null} body - Request body (will be JSON-serialized)
  * @returns {Promise<{ok: boolean, status: number, data: any}>}
  */
-async function _apiFetch(path, method = 'GET', body = null) {
+async function _apiFetch(path, method, body) {
+  // Derive a human-friendly loading message from the path and method
+  const loadingMsg = _getLoadingMessage(path, method);
+  showLoading(loadingMsg);
+
   // Inject Authorization header from Auth module if a token is stored
   const authHeaders = (typeof Auth !== 'undefined') ? Auth.authHeaders() : {};
 
   const options = {
-    method,
+    method:  method || 'GET',
     headers: { 'Content-Type': 'application/json', ...authHeaders },
   };
-  if (body !== null) {
+  if (body !== null && body !== undefined) {
     options.body = JSON.stringify(body);
   }
+
   try {
     const response = await fetch(API_BASE_URL + path, options);
 
-    // If the server returns 401 (token expired / invalid), force logout
+    // If the server returns 401 (token expired / invalid), force logout.
+    // Auth.logout() now does a full page reload, so the login screen will
+    // reappear with a fresh _loginSuccessCallback — re-login works correctly
+    // for all roles after this.
     if (response.status === 401 && typeof Auth !== 'undefined') {
       console.warn('[API] 401 Unauthorized — logging out.');
+      hideLoading();
       Auth.logout();
       return { ok: false, status: 401, data: null };
     }
 
     let data = null;
     try { data = await response.json(); } catch (_) {}
+    hideLoading();
     return { ok: response.ok, status: response.status, data };
   } catch (err) {
     console.error('[API] Network error:', err);
+    hideLoading();
     return { ok: false, status: 0, data: null };
   }
+}
+
+/**
+ * Generate a user-friendly loading message based on the API endpoint and method.
+ * @param {string} path
+ * @param {string} method
+ * @returns {string}
+ */
+function _getLoadingMessage(path, method) {
+  const m = (method || 'GET').toUpperCase();
+  if (path.includes('/auth/login')) return 'Signing in...';
+  if (path.includes('/auth/register')) return 'Creating user account...';
+  if (path.includes('/auth/me')) return 'Verifying session...';
+  if (path.includes('/items?')) return 'Loading records...';
+  if (m === 'POST' && path.endsWith('/items')) return 'Saving routing document...';
+  if (m === 'PATCH' && path.includes('/items')) return 'Updating routing document...';
+  if (m === 'DELETE' && path.includes('/items')) return 'Deleting routing document...';
+  if (path.includes('/items/') && path.includes('/activities')) return 'Saving activity...';
+  if (path.includes('/items/')) return 'Loading routing details...';
+  if (path.includes('/production-lines') && m === 'POST') return 'Creating production line...';
+  if (path.includes('/production-lines') && m === 'PATCH') return 'Updating production line...';
+  if (path.includes('/production-lines') && m === 'DELETE') return 'Deleting production line...';
+  if (path.includes('/production-lines') && m === 'PUT') return 'Updating production line...';
+  if (path.includes('/production-lines')) return 'Loading production lines...';
+  if (path.includes('/logs') && m === 'DELETE') return 'Cleaning up old logs...';
+  if (path.includes('/logs')) return 'Loading audit logs...';
+  if (path.includes('/health')) return 'Checking server...';
+  return 'Processing...';
 }
 
 /* ── Auth endpoints ── */
@@ -84,7 +187,7 @@ async function apiGetMe() {
 }
 
 /** POST /api/auth/register (admin only) */
-async function apiRegister(username, password, role = 'user') {
+async function apiRegister(username, password, role) {
   return _apiFetch('/api/auth/register', 'POST', { username, password, role });
 }
 
@@ -107,11 +210,13 @@ async function apiHealthCheck() {
  * Uses limit=1000 to fetch all records (API caps at 1000).
  * @param {string} [query] - Optional search query
  * @param {number} [limit] - Max results (default 1000 to get all)
+ * @param {number} [offset] - Offset for pagination
  */
-async function apiGetItems(query = '', limit = 1000) {
+async function apiGetItems(query, limit, offset) {
   const params = new URLSearchParams();
   if (query) params.set('q', query);
-  params.set('limit', String(limit));
+  params.set('limit', String(limit || 1000));
+  if (offset !== undefined && offset !== null) params.set('offset', String(offset));
   return _apiFetch(`/api/items?${params.toString()}`);
 }
 
@@ -479,30 +584,79 @@ async function apiDeleteLineActivity(lineCode, activityId) {
 }
 
 /* ============================================
+   LOGS (ADMIN ONLY)
+   ============================================ */
+
+/**
+ * GET /api/logs
+ * List audit log entries with filtering and pagination.
+ * Requires admin role.
+ *
+ * Query Parameters:
+ *   page, per_page, username, action, target_type, from_date, to_date
+ *
+ * @param {Object} filters - Optional filters
+ * @returns {Promise<{ok: boolean, status: number, data: any}>}
+ */
+async function apiGetLogs(filters) {
+  const params = new URLSearchParams();
+  if (filters) {
+    if (filters.page)     params.set('page', String(filters.page));
+    if (filters.per_page) params.set('per_page', String(filters.per_page));
+    if (filters.username) params.set('username', filters.username);
+    if (filters.action)   params.set('action', filters.action);
+    if (filters.target_type) params.set('target_type', filters.target_type);
+    if (filters.from_date)   params.set('from_date', filters.from_date);
+    if (filters.to_date)     params.set('to_date', filters.to_date);
+  }
+  const qs = params.toString();
+  return _apiFetch(`/api/logs${qs ? '?' + qs : ''}`);
+}
+
+/**
+ * DELETE /api/logs/cleanup
+ * Purge log entries older than N days.
+ * Requires admin role.
+ *
+ * @param {number} days - Number of days (default 90)
+ * @returns {Promise<{ok: boolean, status: number, data: any}>}
+ */
+async function apiCleanupLogs(days) {
+  const params = new URLSearchParams();
+  if (days !== undefined && days !== null) params.set('days', String(days));
+  const qs = params.toString();
+  return _apiFetch(`/api/logs/cleanup${qs ? '?' + qs : ''}`, 'DELETE');
+}
+
+/* ============================================
    EXPOSE GLOBALLY
    ============================================ */
-window.apiLogin    = apiLogin;
-window.apiGetMe    = apiGetMe;
-window.apiRegister = apiRegister;
-window.apiHealthCheck             = apiHealthCheck;
-window.apiGetItems                = apiGetItems;
-window.apiCreateItem              = apiCreateItem;
-window.apiGetItem                 = apiGetItem;
-window.apiUpdateItem              = apiUpdateItem;
-window.apiDeleteItem              = apiDeleteItem;
-window.apiAddItemActivity         = apiAddItemActivity;
-window.apiUpdateItemActivity      = apiUpdateItemActivity;
-window.apiDeleteItemActivity      = apiDeleteItemActivity;
-window.apiGetProductionLines      = apiGetProductionLines;
-window.apiCreateProductionLine    = apiCreateProductionLine;
-window.apiGetProductionLine       = apiGetProductionLine;
-window.apiRenameProductionLine    = apiRenameProductionLine;
-window.apiReplaceProductionLine   = apiReplaceProductionLine;
-window.apiDeleteProductionLine    = apiDeleteProductionLine;
-window.apiAddLineActivity         = apiAddLineActivity;
-window.apiUpdateLineActivity      = apiUpdateLineActivity;
-window.apiDeleteLineActivity      = apiDeleteLineActivity;
+window.showLoading             = showLoading;
+window.hideLoading             = hideLoading;
+window.apiLogin                = apiLogin;
+window.apiGetMe                = apiGetMe;
+window.apiRegister             = apiRegister;
+window.apiHealthCheck          = apiHealthCheck;
+window.apiGetItems             = apiGetItems;
+window.apiCreateItem           = apiCreateItem;
+window.apiGetItem              = apiGetItem;
+window.apiUpdateItem           = apiUpdateItem;
+window.apiDeleteItem           = apiDeleteItem;
+window.apiAddItemActivity      = apiAddItemActivity;
+window.apiUpdateItemActivity   = apiUpdateItemActivity;
+window.apiDeleteItemActivity   = apiDeleteItemActivity;
+window.apiGetProductionLines   = apiGetProductionLines;
+window.apiCreateProductionLine = apiCreateProductionLine;
+window.apiGetProductionLine    = apiGetProductionLine;
+window.apiRenameProductionLine = apiRenameProductionLine;
+window.apiReplaceProductionLine = apiReplaceProductionLine;
+window.apiDeleteProductionLine = apiDeleteProductionLine;
+window.apiAddLineActivity      = apiAddLineActivity;
+window.apiUpdateLineActivity   = apiUpdateLineActivity;
+window.apiDeleteLineActivity   = apiDeleteLineActivity;
+window.apiGetLogs              = apiGetLogs;
+window.apiCleanupLogs          = apiCleanupLogs;
 // Internal helpers exposed for use in other modules
-window._normalizeApiItem          = _normalizeApiItem;
-window._mapItemPayload            = _mapItemPayload;
-window._mapItemMetaPayload        = _mapItemMetaPayload;
+window._normalizeApiItem       = _normalizeApiItem;
+window._mapItemPayload         = _mapItemPayload;
+window._mapItemMetaPayload     = _mapItemMetaPayload;

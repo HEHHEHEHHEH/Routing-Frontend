@@ -8,16 +8,20 @@
 
 /**
  * Module loading order:
- * 1. state.js       - Constants, enums, global state
- * 2. mock-db.js     - Data layer, mock database
- * 3. utils.js       - Helper functions
- * 4. calculations.js - Math engine
- * 5. view-controller.js - View state management
- * 6. routing-form.js - Form handling
- * 7. search.js      - Search engine
- * 8. manage-activities.js - Activity CRUD
- * 9. all-data.js    - Paginated table view
- * 10. tabs.js       - Tab controller/router
+ * 1. auth.js          - Authentication manager
+ * 2. api-service.js   - Backend API client
+ * 3. state.js         - Constants, enums, global state
+ * 4. mock-db.js       - Data layer, mock database
+ * 5. utils.js         - Helper functions
+ * 6. calculations.js  - Math engine
+ * 7. view-controller.js - View state management
+ * 8. routing-form.js  - Form handling
+ * 9. search.js        - Search engine
+ * 10. manage-activities.js - Activity CRUD
+ * 11. all-data.js     - Paginated table view
+ * 12. admin-panel.js  - Admin panel (user management)
+ * 13. logs.js         - Audit logs view
+ * 14. tabs.js         - Tab controller/router
  *
  * All modules expose their functions globally via window.*
  * This entry point simply initializes the app.
@@ -31,6 +35,9 @@ async function initApp() {
 
   // --- Authentication gate: blocks until user is logged in ---
   await Auth.init();
+
+  // --- Initialize admin tabs visibility based on role ---
+  _refreshAdminTabs();
 
   // --- Load production lines from API into local cache ---
   try {
@@ -119,4 +126,4 @@ document.addEventListener('keydown', handleKeyboardShortcuts);
 
 // Also expose init function globally for manual re-initialization
 window.initApp = initApp;
-window.populateProdLineSelect = populateProdLineSelect;
+window.populateProdLineSelect = populateProdLineSelect; 

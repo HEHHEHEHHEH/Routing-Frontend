@@ -13,6 +13,11 @@
       in sessionStorage and the app initializes.
    4. On logout, the token is cleared and the
       login screen is shown again.
+
+   Admin Features:
+   - Admin-only tab visibility (Admin Panel, Audit Logs)
+   - Admin role badge in user badge
+   - isAdmin() helper for module checks
    ============================================ */
 
 const Auth = {
@@ -42,6 +47,15 @@ const Auth = {
 
   isLoggedIn() {
     return !!this.getToken();
+  },
+
+  /**
+   * Check if the currently logged-in user has the 'admin' role.
+   * @returns {boolean}
+   */
+  isAdmin() {
+    const user = this.getUser();
+    return !!(user && user.role === 'admin');
   },
 
   /**
@@ -89,12 +103,25 @@ const Auth = {
   },
 
   /**
-   * Clear token and user, show the login screen.
+   * Clear token and user, then reload the page.
+   *
+   * WHY RELOAD instead of just _showLoginScreen():
+   * _waitForLogin() creates a one-shot Promise whose resolve function is stored
+   * in window._loginSuccessCallback.  That callback is consumed (set to null)
+   * the first time a login succeeds.  If we only call _showLoginScreen() here,
+   * any subsequent Sign-In attempt will authenticate correctly (Auth.login()
+   * returns ok:true and the token is stored), but _loginSuccessCallback is null
+   * so _hideLoginScreen() is never called and the app never initialises for the
+   * new session — the login screen just sits there with "no changes".
+   *
+   * A full page reload lets initApp() run from scratch: isLoggedIn() returns
+   * false, _waitForLogin() registers a fresh callback, and the next login works
+   * correctly for every role (admin, superuser, user).
    */
   logout() {
     sessionStorage.removeItem(this.TOKEN_KEY);
     sessionStorage.removeItem(this.USER_KEY);
-    _showLoginScreen();
+    window.location.reload();
   },
 
   /**
@@ -134,6 +161,7 @@ const Auth = {
       if (valid) {
         _hideLoginScreen();
         _updateUserBadge(this.getUser());
+        _refreshAdminTabs();
         return; // Token valid — proceed to app init
       }
       // Token expired
@@ -145,6 +173,7 @@ const Auth = {
     await _waitForLogin();
     _hideLoginScreen();
     _updateUserBadge(this.getUser());
+    _refreshAdminTabs();
   },
 };
 
@@ -280,7 +309,7 @@ async function _handleLoginSubmit() {
   }
 
   // Loading state
-  if (btn) { btn.disabled = true; btn.textContent = 'Signing in…'; }
+  if (btn) { btn.disabled = true; btn.textContent = 'Signing in...'; }
 
   const result = await Auth.login(username, password);
 
@@ -314,10 +343,13 @@ function _updateUserBadge(user) {
   const badge = document.getElementById('user-badge');
   if (!badge || !user) return;
   const roleLabel = { admin: 'Admin', superuser: 'Superuser', user: 'User' }[user.role] || user.role;
+  const roleColor = user.role === 'admin' ? '#dc2626' : '#0369a1';
+  const roleBg    = user.role === 'admin' ? '#fef2f2' : '#e0f2fe';
+  const roleBorder= user.role === 'admin' ? '#fecaca' : '#bae6fd';
   badge.innerHTML = `
     <span style="font-size:0.78rem; color:#475569; font-weight:500;">${user.username}</span>
-    <span style="font-size:0.7rem; background:#e0f2fe; color:#0369a1; padding:0.1rem 0.5rem;
-                 border-radius:9999px; font-weight:600; border:1px solid #bae6fd;">${roleLabel}</span>
+    <span style="font-size:0.7rem; background:${roleBg}; color:${roleColor}; padding:0.1rem 0.5rem;
+                 border-radius:9999px; font-weight:600; border:1px solid ${roleBorder};">${roleLabel}</span>
     <button onclick="Auth.logout()"
             style="font-size:0.75rem; padding:0.2rem 0.65rem; border-radius:6px; border:1px solid #e2e8f0;
                    background:#f8fafc; color:#64748b; cursor:pointer; font-weight:500;"
@@ -329,7 +361,59 @@ function _updateUserBadge(user) {
 }
 
 /* ============================================
+   ADMIN TAB VISIBILITY
+   ============================================ */
+
+/**
+ * Show or hide navigation tabs based on the current user's role.
+ *
+ * admin     → Admin Panel, Audit Logs only.
+ * superuser → All routing/data tabs (Add, Lookup, Update, Manage, All Data).
+ * user      → Look Up Routing and View All Data only.
+ *
+ * Call this after login and after role changes.
+ */
+function _refreshAdminTabs() {
+  const user    = Auth.getUser();
+  const role    = user ? user.role : '';
+  const isAdmin = role === 'admin';
+  const isUser  = role === 'user';
+
+  // Per-tab visibility map  { tabId: visibleForRoles[] }
+  const tabVisibility = {
+    'tab-add':     ['superuser'],
+    'tab-lookup':  ['superuser', 'user'],
+    'tab-update':  ['superuser'],
+    'tab-manage':  ['superuser'],
+    'tab-alldata': ['superuser', 'user'],
+    'tab-admin':   ['admin'],
+    'tab-logs':    ['admin'],
+  };
+
+  Object.entries(tabVisibility).forEach(([id, allowedRoles]) => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = allowedRoles.includes(role) ? '' : 'none';
+  });
+
+  // Redirect if the user is on a tab their role doesn't allow
+  const allowedStates = {
+    admin:     [AppState.ADMIN, AppState.LOGS],
+    superuser: [AppState.ADD, AppState.LOOKUP, AppState.UPDATE, AppState.MANAGE, AppState.ALLDATA],
+    user:      [AppState.LOOKUP, AppState.ALLDATA],
+  };
+
+  const allowed = allowedStates[role] || allowedStates['superuser'];
+  if (!allowed.includes(App.currentState)) {
+    // Send each role to their default landing tab
+    if (isAdmin) switchTab(AppState.ADMIN);
+    else if (isUser) switchTab(AppState.LOOKUP);
+    else switchTab(AppState.ADD);
+  }
+}
+
+/* ============================================
    EXPOSE GLOBALLY
    ============================================ */
 window.Auth               = Auth;
 window._handleLoginSubmit = _handleLoginSubmit;
+window._refreshAdminTabs  = _refreshAdminTabs;

@@ -38,7 +38,9 @@ const AppState = Object.freeze({
   LOOKUP:   'LOOKUP',
   UPDATE:   'UPDATE',
   MANAGE:   'MANAGE',
-  ALLDATA:  'ALLDATA'
+  ALLDATA:  'ALLDATA',
+  ADMIN:    'ADMIN',
+  LOGS:     'LOGS'
 });
 
 /**
@@ -68,13 +70,16 @@ const App = {
   itemsPerPage: 20,
 
   /** @type {boolean} Whether form is in editable mode */
-  isFormEditable: true
+  isFormEditable: true,
+
+  /** @type {boolean} Whether admin tabs have been initialized */
+  adminTabsInitialized: false
 };
 
 /**
  * Tab Form State — persists unsaved form data when switching tabs.
  * Keyed by AppState value (ADD, LOOKUP, UPDATE).
- * Only the routing-form tabs need state saved; MANAGE and ALLDATA don't have input forms.
+ * Only the routing-form tabs need state saved; MANAGE, ALLDATA, ADMIN, LOGS don't have input forms.
  *
  * Each entry holds:
  *   { itemCode, skuDesc, qty, prodLine, mode, rows: [{activity, pax, machine, time, rawFormula}] }
