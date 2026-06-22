@@ -108,15 +108,31 @@ async function handleDeleteItem() {
   });
   if (!r.confirmed) return;
 
-  // --- Try API first ---
+  // --- Try API ---
+  let apiOk = false;
   try {
     const res = await apiDeleteItem(itemCode);
-    if (!res.ok) console.warn('[API] Delete item failed (status ' + res.status + '), removing locally.');
+
+    if (!res.ok) {
+      // Server rejected the delete — show the reason and abort
+      const errMsg = getApiErrorMessage(res, 'delete item', itemCode);
+      await showModal({
+        icon:         'danger',
+        title:        'Delete Failed',
+        message:      errMsg,
+        type:         'confirm',
+        confirmLabel: 'OK',
+      });
+      return; // Do not remove from local cache
+    }
+
+    apiOk = true;
   } catch (_) {
+    // Network error — remove locally only
     console.warn('[API] Unreachable — deleting from local cache only.');
   }
 
-  // Remove from local cache
+  // Remove from local cache (always after confirmed API delete, or on network fallback)
   delete mockRoutingDB[itemCode.toUpperCase()];
 
   // Clear tab state and reset form

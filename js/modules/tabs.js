@@ -36,6 +36,24 @@ const VIEW_ELEMENTS = {
   [AppState.LOGS]:  'view-logs'
 };
 
+const TAB_PAGE_TITLES = {
+  [AppState.ADD]:     'Add New Routing',
+  [AppState.LOOKUP]:  'Look Up Record',
+  [AppState.UPDATE]:  'Update Routing',
+  [AppState.MANAGE]:  'Line Configuration',
+  [AppState.ALLDATA]: 'Database',
+  [AppState.ADMIN]:   'Admin Panel',
+  [AppState.LOGS]:    'System Logs',
+};
+
+const ROUTING_TABS = [
+  AppState.ADD,
+  AppState.LOOKUP,
+  AppState.UPDATE,
+  AppState.MANAGE,
+  AppState.ALLDATA,
+];
+
 /**
  * Switch to a different tab/view.
  * Saves the current tab's form state before switching,
@@ -101,8 +119,23 @@ function switchTab(tabId) {
     if (activeEl) activeEl.className = 'nav-tab nav-tab--active';
   }
 
+  _updatePageTitle(tabId);
+
   // Route to the appropriate view
   routeToView(tabId, previousState);
+}
+
+function _updatePageTitle(tabId) {
+  const titleEl = document.getElementById('page-title');
+  if (titleEl) {
+    titleEl.textContent = TAB_PAGE_TITLES[tabId] || '';
+  }
+
+  const instructionPanel = document.getElementById('instruction-panel');
+  if (instructionPanel) {
+    const showInstructions = ROUTING_TABS.includes(tabId);
+    instructionPanel.classList.toggle('instruction-panel--visible', showInstructions);
+  }
 }
 
 /**

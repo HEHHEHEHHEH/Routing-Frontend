@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Routing Template | Pioneer Adhesives Inc.</title>
+  <title>Routing Template System | Pioneer Adhesives Inc.</title>
 
   <!-- ============================================
        STYLESHEETS - Modular CSS Architecture
@@ -137,7 +137,8 @@
         transition: border-color 0.15s;
       }
       .admin-input:focus {
-        border-color: #3b82f6;
+        border-color: #b91c1c;
+        box-shadow: 0 0 0 2px rgba(185, 28, 28, 0.15);
       }
       .admin-label {
         display: block;
@@ -157,11 +158,11 @@
         transition: background 0.15s;
       }
       .admin-btn--primary {
-        background: #2563eb;
+        background: #b91c1c;
         color: #fff;
       }
       .admin-btn--primary:hover {
-        background: #1d4ed8;
+        background: #991b1b;
       }
       .admin-btn--primary:disabled {
         background: #93c5fd;
@@ -223,77 +224,107 @@
       .admin-table tbody tr:hover td {
         background: #f8fafc;
       }
+
+      /* ── Responsive Layout Classes ── */
+      .lookup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem 2.5rem; }
+      .manage-layout-grid { display: grid; grid-template-columns: 280px 1fr; gap: 1.25rem; align-items: start; }
+      .admin-layout-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+      .logs-filter-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.75rem; align-items: end; }
+      .logs-filter-actions { display: flex; gap: 0.5rem; margin-top: 0.75rem; justify-content: flex-end; }
+      .admin-info-bar { display: flex; align-items: center; gap: 1.5rem; }
+      .modal-actions { display: flex; gap: 0.6rem; justify-content: flex-end; }
+      .manage-page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+      .manage-sidebar { background: #f8fafc; padding: 1.25rem; border-radius: 10px; border: 1px solid #e2e8f0; }
+      .activity-add-row { padding: 1rem 1.25rem; border-bottom: 1px solid #f1f5f9; background: #fafafa; display: flex; gap: 0.6rem; align-items: center; }
+
+      /* ── Remove browser spinner arrows from number inputs in the routing table ── */
+      .pax-input::-webkit-outer-spin-button,
+      .pax-input::-webkit-inner-spin-button,
+      .machine-input::-webkit-outer-spin-button,
+      .machine-input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+      .pax-input,
+      .machine-input {
+        -moz-appearance: textfield; /* Firefox */
+        appearance: textfield;
+      }
     </style>
 <base target="_blank">
 </head>
-<body>
+<body class="app-body">
 
   <!-- ============================================
-       MAIN CONTAINER
+       TOP HEADER NAVIGATION
        ============================================ -->
-  <div class="container">
-
-    <!-- Header -->
-    <header class="header">
-      <div>
-        <h1 class="header-title">PIONEER ADHESIVES INC.</h1>
-        <h2 class="header-subtitle">ROUTING TEMPLATE SYSTEM</h2>
+  <header class="app-header">
+    <div class="app-header__left">
+      <div class="app-logo">
+        <svg viewBox="0 0 1150 120" xmlns="http://www.w3.org/2000/svg" class="app-logo__svg" aria-label="Pioneer Adhesives, Inc.">
+          <path d="M 0 5 L 360 5 C 450 5 450 105 360 105 L 0 105 Z" fill="#da291c" />
+          <g transform="skewX(-16)">
+            <text x="80" y="86" fill="#ffffff" style="font-family:'Arial Black',Impact,system-ui,sans-serif;font-weight:900;font-size:96px;letter-spacing:-2px">
+              <tspan style="font-size:96px">P</tspan><tspan style="font-size:74px;letter-spacing:-1px" dy="-4">ioneer</tspan>
+            </text>
+          </g>
+          <g transform="translate(480, 0)">
+            <text x="0" y="86" fill="#1e293b" style="font-family:'Arial Black',Impact,system-ui,sans-serif;font-weight:900;font-size:76px;letter-spacing:-2.5px;font-style:italic">Adhesives, Inc.</text>
+            <path d="M -10 100 L 590 100 Q 620 100 640 80 Q 620 112 590 112 L -10 112 Z" fill="#94a3b8" />
+          </g>
+        </svg>
+        <div class="app-logo__divider">
+          <span class="app-logo__brand">Pioneer</span>
+          <span class="app-logo__product">Routing</span>
+        </div>
       </div>
-      <!-- User badge: populated by auth.js after login -->
-      <div id="user-badge"
-           style="display:none; align-items:center; gap:0.6rem; margin-left:auto;">
-      </div>
-    </header>
 
-    <!-- ============================================
-         NAVIGATION TABS (7 Main Views)
-         ============================================ -->
-    <nav class="nav-tabs">
-      <button id="tab-add"
-              onclick="switchTab('ADD')"
-              class="nav-tab nav-tab--active">
-        Add New Routing
+      <nav class="app-nav" id="main-nav">
+        <button id="tab-add" onclick="switchTab('ADD')" class="nav-tab nav-tab--active">Add Record</button>
+        <button id="tab-lookup" onclick="switchTab('LOOKUP')" class="nav-tab nav-tab--inactive">Look Up</button>
+        <button id="tab-update" onclick="switchTab('UPDATE')" class="nav-tab nav-tab--inactive">Update Record</button>
+        <button id="tab-manage" onclick="switchTab('MANAGE')" class="nav-tab nav-tab--inactive">Manage Lines</button>
+        <button id="tab-alldata" onclick="switchTab('ALLDATA')" class="nav-tab nav-tab--inactive">Database</button>
+        <button id="tab-admin" onclick="switchTab('ADMIN')" class="nav-tab nav-tab--inactive" style="display:none;">Admin Panel</button>
+        <button id="tab-logs" onclick="switchTab('LOGS')" class="nav-tab nav-tab--inactive" style="display:none;">System Logs</button>
+      </nav>
+    </div>
+
+    <div class="app-header__right">
+      <span id="role-badge" class="role-badge hidden">Admin Access</span>
+      <div id="user-badge" style="display:none;"></div>
+      <button id="header-logout-btn" class="logout-btn hidden" onclick="Auth.confirmLogout()" title="Log Out" type="button">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
       </button>
-      <button id="tab-lookup"
-              onclick="switchTab('LOOKUP')"
-              class="nav-tab nav-tab--inactive">
-        Look Up Routing
-      </button>
-      <button id="tab-update"
-              onclick="switchTab('UPDATE')"
-              class="nav-tab nav-tab--inactive">
-        Update Routing
-      </button>
-      <button id="tab-manage"
-              onclick="switchTab('MANAGE')"
-              class="nav-tab nav-tab--inactive">
-        Manage Line Activities
-      </button>
-      <button id="tab-alldata"
-              onclick="switchTab('ALLDATA')"
-              class="nav-tab nav-tab--inactive">
-        View All Data
-      </button>
-      <!-- Admin-only tabs (hidden by default, shown via JS for admin users) -->
-      <button id="tab-admin"
-              onclick="switchTab('ADMIN')"
-              class="nav-tab nav-tab--inactive"
-              style="display:none;">
-        &#9881; Admin Panel
-      </button>
-      <button id="tab-logs"
-              onclick="switchTab('LOGS')"
-              class="nav-tab nav-tab--inactive"
-              style="display:none;">
-        &#128203; Audit Logs
-      </button>
-    </nav>
+    </div>
+  </header>
+
+  <!-- ============================================
+       MAIN CONTENT AREA
+       ============================================ -->
+  <main class="app-main">
+    <div class="page-title-bar">
+      <h1 id="page-title">Add New Routing</h1>
+      <div id="instruction-panel" class="instruction-panel instruction-panel--visible">
+        <div class="instruction-panel__item">
+          <span class="instruction-panel__swatch"></span>
+          Editable Cell
+        </div>
+        <div class="instruction-panel__item">
+          <span class="instruction-panel__fx">&#402;</span>
+          Click to add formula
+        </div>
+      </div>
+    </div>
+
+    <div class="app-content custom-scrollbar">
+      <div class="app-content__inner">
 
     <!-- ============================================
          VIEW 1-3: ROUTING FORM (ADD / LOOKUP / UPDATE)
          Shared form component used by 3 modes
          ============================================ -->
-    <div id="view-routing">
+    <div id="view-routing" class="view-card">
 
       <!-- Search Bar (LOOKUP & UPDATE modes only) -->
       <div id="search-section" class="search-section hidden">
@@ -324,15 +355,11 @@
         <div style="display:flex; flex-direction:column; align-items:flex-end; gap:0.65rem;">
           <!-- Update / Delete Buttons — UPDATE mode only, shown after a record is loaded -->
           <div id="update-action-buttons" style="display:none; align-items:center; gap:0.75rem;">
-            <button onclick="handleUpdateItem()"
-                    style="padding:0.65rem 2rem; border-radius:8px; font-size:0.95rem; font-weight:700; background:#16a34a; color:#fff; border:none; cursor:pointer; transition:background 0.15s; letter-spacing:0.01em;"
-                    onmouseover="this.style.background='#15803d'" onmouseout="this.style.background='#16a34a'">
-              ✓ Update
+            <button onclick="handleUpdateItem()" class="btn-update-record">
+              Update
             </button>
-            <button onclick="handleDeleteItem()"
-                    style="padding:0.65rem 2rem; border-radius:8px; font-size:0.95rem; font-weight:700; background:#fff; color:#dc2626; border:1.5px solid #fca5a5; cursor:pointer; transition:background 0.15s; letter-spacing:0.01em;"
-                    onmouseover="this.style.background='#fff1f2'" onmouseout="this.style.background='#fff'">
-              ✕ Delete
+            <button onclick="handleDeleteItem()" class="btn-delete-record">
+              Delete
             </button>
           </div>
 
@@ -342,12 +369,12 @@
               <button id="btn-fg"
                       onclick="setMode('FG')"
                       class="mode-btn mode-btn--active">
-                FG (Finished Goods)
+                Finished Goods (FG)
               </button>
               <button id="btn-bm"
                       onclick="setMode('BM')"
                       class="mode-btn">
-                BM (Bulk Material)
+                Bulk Material (BM)
               </button>
             </div>
           </div>
@@ -356,7 +383,7 @@
 
       <!-- LOOKUP plain-text display (shown only in LOOKUP mode) -->
       <div id="lookup-display" style="display:none; margin-bottom:1.25rem;">
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.25rem 2.5rem;">
+        <div class="lookup-grid">
           <div>
             <p style="margin:0 0 0.5rem;"><strong>ITEM CODE:</strong> <span id="ld-itemCode" style="font-weight:500;"></span></p>
             <p style="margin:0 0 0.5rem;"><strong>SKU Description:</strong> <span id="ld-skuDesc" style="font-weight:500;"></span></p>
@@ -456,7 +483,7 @@
           </tbody>
           <tfoot>
             <tr>
-              <td class="text-right pr-4">TOTAL</td>
+              <td class="text-right pr-4" style="color:#64748b;text-transform:uppercase;font-size:0.75rem;font-weight:900;">TOTAL</td>
               <td id="sumPax">0</td>
               <td id="sumMachine">0</td>
               <td id="sumTime">0.00000</td>
@@ -484,7 +511,7 @@
       <!-- Save Button (ADD mode) -->
       <div id="save-section" class="save-section">
         <button onclick="saveRoutingDocument()" class="btn btn--success">
-          Save Routing Document
+          Save Routing Record
         </button>
       </div>
 
@@ -495,10 +522,10 @@
          VIEW 4: MANAGE LINE ACTIVITIES
          Activity CRUD for each production line
          ============================================ -->
-    <div id="view-manage" class="hidden">
+    <div id="view-manage" class="hidden view-card">
 
       <!-- Page Header -->
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+      <div class="manage-page-header">
         <div>
           <h3 style="font-size: 1.125rem; font-weight: 700; color: var(--gray-800); margin: 0 0 0.2rem;">Line Activity Database</h3>
           <p style="font-size: 0.8rem; color: #64748b; margin: 0;">Manage production lines and their associated activities.</p>
@@ -508,7 +535,7 @@
         </span>
       </div>
 
-      <div style="display: grid; grid-template-columns: 280px 1fr; gap: 1.25rem; align-items: start;">
+      <div class="manage-layout-grid">
 
         <!-- LEFT SIDEBAR: Line Selector -->
         <div style="background: #f8fafc; padding: 1.25rem; border-radius: 10px; border: 1px solid #e2e8f0;">
@@ -557,7 +584,7 @@
           </div>
 
           <!-- Add Activity Input -->
-          <div style="padding: 1rem 1.25rem; border-bottom: 1px solid #f1f5f9; background: #fafafa; display: flex; gap: 0.6rem; align-items: center;">
+          <div class="activity-add-row">
             <input type="text"
                    id="newActivityInput"
                    style="flex: 1; border: 1px solid #cbd5e1; border-radius: 7px; padding: 0.5rem 0.75rem; font-size: 0.875rem; color: #1e293b; background: #fff; outline: none;"
@@ -584,103 +611,11 @@
       </div>
     </div>
 
-
-    <!-- ============================================
-         TIME FORMULA MODAL
-         Opens when user clicks a Time (min) cell
-         ============================================ -->
-    <div id="timeFormulaModal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.45); z-index:9999; align-items:center; justify-content:center;">
-      <div style="background:#fff; border-radius:14px; padding:2rem; max-width:440px; width:90%; box-shadow:0 20px 40px rgba(0,0,0,0.18); position:relative;">
-
-        <!-- Header -->
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem;">
-          <div style="display:flex; align-items:center; gap:0.6rem;">
-            <div style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:#eff6ff;border:1px solid #bfdbfe;">
-              <span style="font-size:0.95rem;color:#2563eb;font-style:italic;font-weight:700;">f</span>
-            </div>
-            <h4 style="font-size:1rem; font-weight:700; color:#0f172a; margin:0;">Time Formula</h4>
-          </div>
-          <button id="timeFormulaCloseBtn"
-                  style="background:none;border:none;cursor:pointer;font-size:1.1rem;color:#94a3b8;line-height:1;padding:0.2rem 0.4rem;border-radius:4px;"
-                  onmouseover="this.style.color='#475569'" onmouseout="this.style.color='#94a3b8'">
-            &times;
-          </button>
-        </div>
-
-        <!-- Description -->
-        <p style="font-size:0.82rem; color:#64748b; margin:0 0 1.25rem; line-height:1.55;">
-          Enter a formula like <code style="background:#f1f5f9;padding:0.1rem 0.35rem;border-radius:4px;color:#2563eb;font-size:0.8rem;">8/60</code> or
-          <code style="background:#f1f5f9;padding:0.1rem 0.35rem;border-radius:4px;color:#2563eb;font-size:0.8rem;">8/60+3/60</code>.
-          Supported operators: <code style="background:#f1f5f9;padding:0.1rem 0.35rem;border-radius:4px;color:#475569;font-size:0.8rem;">+ - * / ( )</code>
-        </p>
-
-        <!-- Formula Input -->
-        <label style="display:block;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#94a3b8;margin-bottom:0.4rem;">Formula</label>
-        <div style="display:flex;align-items:center;border:1.5px solid #3b82f6;border-radius:8px;overflow:hidden;background:#fff;margin-bottom:1rem;">
-          <span style="padding:0 0.6rem;font-size:0.9rem;color:#94a3b8;font-weight:600;border-right:1px solid #e2e8f0;background:#f8fafc;">=</span>
-          <input id="timeFormulaInput"
-                 type="text"
-                 placeholder="8/60 or 8/60+3/60"
-                 style="flex:1;border:none;outline:none;padding:0.55rem 0.75rem;font-size:0.9rem;color:#0f172a;font-family:monospace;">
-        </div>
-
-        <!-- Computed Result -->
-        <div style="display:flex;align-items:center;justify-content:space-between;background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:0.65rem 1rem;margin-bottom:1.5rem;">
-          <span style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#0369a1;">Computed Result</span>
-          <span id="timeFormulaResult" style="font-size:1rem;font-weight:700;color:#2563eb;font-family:monospace;">0.00000</span>
-        </div>
-
-        <!-- Action Buttons -->
-        <div style="display:flex;gap:0.6rem;justify-content:flex-end;">
-          <button id="timeFormulaCancelBtn"
-                  style="padding:0.5rem 1.2rem;border-radius:8px;font-size:0.875rem;font-weight:600;background:#f1f5f9;color:#374151;border:1px solid #e2e8f0;cursor:pointer;"
-                  onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
-            Cancel
-          </button>
-          <button id="timeFormulaApplyBtn"
-                  style="padding:0.5rem 1.2rem;border-radius:8px;font-size:0.875rem;font-weight:600;background:#2563eb;color:#fff;border:none;cursor:pointer;"
-                  onmouseover="this.style.background='#1d4ed8'" onmouseout="this.style.background='#2563eb'">
-            Apply to Cell
-          </button>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- ============================================
-         CUSTOM MODAL DIALOG
-         Replaces browser prompt() and confirm()
-         ============================================ -->
-    <div id="customModal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.45); z-index:9999; align-items:center; justify-content:center;">
-      <div style="background:#fff; border-radius:14px; padding:2rem; max-width:420px; width:90%; box-shadow:0 20px 40px rgba(0,0,0,0.18); position:relative;">
-        <div id="modalIconWrap" style="margin-bottom:1rem;"></div>
-        <h4 id="modalTitle" style="font-size:1rem; font-weight:700; color:#0f172a; margin:0 0 0.4rem;"></h4>
-        <p id="modalMessage" style="font-size:0.875rem; color:#475569; margin:0 0 1.25rem; line-height:1.55;"></p>
-        <div id="modalInputWrap" style="display:none; margin-bottom:1rem;">
-          <input id="modalInput"
-                 style="width:100%; border:1px solid #cbd5e1; border-radius:8px; padding:0.55rem 0.8rem; font-size:0.875rem; color:#0f172a; box-sizing:border-box; outline:none;"
-                 onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#cbd5e1'">
-        </div>
-        <div style="display:flex; gap:0.6rem; justify-content:flex-end;">
-          <button id="modalCancelBtn"
-                  style="padding:0.5rem 1.2rem; border-radius:8px; font-size:0.875rem; font-weight:600; background:#f1f5f9; color:#374151; border:1px solid #e2e8f0; cursor:pointer;"
-                  onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
-            Cancel
-          </button>
-          <button id="modalConfirmBtn"
-                  style="padding:0.5rem 1.2rem; border-radius:8px; font-size:0.875rem; font-weight:600; background:#2563eb; color:#fff; border:none; cursor:pointer;"
-                  onmouseover="this.style.background='#1d4ed8'" onmouseout="this.style.background='#2563eb'">
-            Confirm
-          </button>
-        </div>
-      </div>
-    </div>
-
     <!-- ============================================
          VIEW 5: VIEW ALL DATA
          Paginated table of all routing records
          ============================================ -->
-    <div id="view-alldata" class="hidden">
+    <div id="view-alldata" class="hidden view-card">
       <h3 style="font-size:1.25rem;font-weight:700;color:var(--gray-800);margin-bottom:1.5rem;">
         All Routing Records Database
       </h3>
@@ -726,10 +661,10 @@
          VIEW 6: ADMIN PANEL
          Admin-only user management
          ============================================ -->
-    <div id="view-admin" class="hidden">
+    <div id="view-admin" class="hidden view-card">
 
       <!-- Page Header -->
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+      <div class="manage-page-header">
         <div>
           <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--gray-800); margin: 0 0 0.2rem;">Admin Panel</h3>
           <p style="font-size: 0.82rem; color: #64748b; margin: 0;">System administration and user account management.</p>
@@ -740,7 +675,7 @@
       </div>
 
       <!-- Admin Info Bar -->
-      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1.5rem;">
+      <div class="admin-info-bar" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 1rem 1.25rem; margin-bottom: 1.5rem;">
         <div>
           <p style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #94a3b8; margin: 0 0 0.2rem;">Signed in as</p>
           <p style="font-size: 0.95rem; font-weight: 600; color: #1e293b; margin: 0;">
@@ -750,7 +685,7 @@
         </div>
       </div>
 
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+      <div class="admin-layout-grid">
 
         <!-- LEFT: Create User Account -->
         <div class="admin-section">
@@ -859,10 +794,10 @@
          VIEW 7: AUDIT LOGS
          Admin-only audit log viewer
          ============================================ -->
-    <div id="view-logs" class="hidden">
+    <div id="view-logs" class="hidden view-card">
 
       <!-- Page Header -->
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+      <div class="manage-page-header">
         <div>
           <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--gray-800); margin: 0 0 0.2rem;">Audit Logs</h3>
           <p style="font-size: 0.82rem; color: #64748b; margin: 0;">View and manage system audit log entries.</p>
@@ -878,7 +813,7 @@
       <!-- Filters Bar -->
       <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 1rem 1.25rem; margin-bottom: 1.5rem;">
         <p style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #94a3b8; margin: 0 0 0.7rem;">Filters</p>
-        <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.75rem; align-items: end;">
+        <div class="logs-filter-grid">
           <div>
             <label class="admin-label" for="log-filter-username">Username</label>
             <input type="text" id="log-filter-username" class="admin-input" placeholder="e.g., alice_smith">
@@ -906,7 +841,7 @@
             <input type="date" id="log-filter-to" class="admin-input">
           </div>
         </div>
-        <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem; justify-content: flex-end;">
+        <div class="logs-filter-actions">
           <button onclick="clearLogFilters()" class="admin-btn admin-btn--secondary">
             Clear Filters
           </button>
@@ -975,13 +910,74 @@
 
     </div>
 
+      </div><!-- /.app-content__inner -->
+    </div><!-- /.app-content -->
+  </main>
+
+  <!-- ============================================
+       TIME FORMULA MODAL
+       ============================================ -->
+  <div id="timeFormulaModal" class="formula-modal modal-backdrop">
+    <div class="formula-modal__panel">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem;">
+        <h4 class="formula-modal__title">
+          <span class="formula-modal__fx">&#402;</span>
+          Time Formula
+        </h4>
+        <button id="timeFormulaCloseBtn" class="formula-modal__close" type="button">&times;</button>
+      </div>
+      <p style="font-size:0.82rem; color:#64748b; margin:0 0 1.5rem; line-height:1.55; font-weight:600;">
+        Enter a formula like <code style="background:#f1f5f9;padding:0.1rem 0.35rem;border-radius:4px;color:#b91c1c;font-size:0.8rem;">8/60</code> or
+        <code style="background:#f1f5f9;padding:0.1rem 0.35rem;border-radius:4px;color:#b91c1c;font-size:0.8rem;">8/60+3/60</code>.
+        Supported operators: <code style="background:#f1f5f9;padding:0.1rem 0.35rem;border-radius:4px;color:#475569;font-size:0.8rem;">+ - * / ( )</code>
+      </p>
+      <label style="display:block;font-size:0.625rem;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:#94a3b8;margin-bottom:0.5rem;">Formula Input</label>
+      <div class="formula-modal__input-wrap" style="margin-bottom:1.25rem;">
+        <span class="formula-modal__equals">=</span>
+        <input id="timeFormulaInput" type="text" class="formula-modal__input" placeholder="8/60 or 8/60+3/60">
+      </div>
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;border-bottom:2px solid #f1f5f9;padding-bottom:1rem;margin-bottom:2rem;">
+        <span style="font-size:0.625rem;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:#94a3b8;">Result</span>
+        <span id="timeFormulaResult" class="formula-modal__result is-empty">0.00000</span>
+      </div>
+      <div style="display:flex;gap:0.75rem;justify-content:flex-end;">
+        <button id="timeFormulaCancelBtn" class="formula-modal__btn-cancel" type="button">Cancel</button>
+        <button id="timeFormulaApplyBtn" class="formula-modal__btn-apply" type="button">Apply to Cell</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================
+       CUSTOM MODAL DIALOG
+       ============================================ -->
+  <div id="customModal" class="custom-modal modal-backdrop">
+    <div class="custom-modal__panel">
+      <div id="modalIconWrap" style="margin-bottom:1rem;"></div>
+      <h4 id="modalTitle" style="font-size:1rem; font-weight:700; color:#0f172a; margin:0 0 0.4rem;"></h4>
+      <p id="modalMessage" style="font-size:0.875rem; color:#475569; margin:0 0 1.25rem; line-height:1.55;"></p>
+      <div id="modalInputWrap" style="display:none; margin-bottom:1rem;">
+        <input id="modalInput"
+               style="width:100%; border:1px solid #cbd5e1; border-radius:8px; padding:0.55rem 0.8rem; font-size:0.875rem; color:#0f172a; box-sizing:border-box; outline:none;"
+               onfocus="this.style.borderColor='#b91c1c'" onblur="this.style.borderColor='#cbd5e1'">
+      </div>
+      <div class="modal-actions">
+        <button id="modalCancelBtn"
+                style="padding:0.5rem 1.2rem; border-radius:8px; font-size:0.875rem; font-weight:600; background:#f1f5f9; color:#374151; border:1px solid #e2e8f0; cursor:pointer;"
+                onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
+          Cancel
+        </button>
+        <button id="modalConfirmBtn"
+                style="padding:0.5rem 1.2rem; border-radius:8px; font-size:0.875rem; font-weight:600; background:#b91c1c; color:#fff; border:none; cursor:pointer;"
+                onmouseover="this.style.background='#991b1b'" onmouseout="this.style.background='#b91c1c'">
+          Confirm
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- ============================================
        JAVASCRIPT - Modular Architecture
        ============================================ -->
-
-  <!-- Layer 0a: Auth Manager (must load before API service) -->
   <script src="js/modules/auth.js"></script>
 
   <!-- Layer 0b: API Service -->

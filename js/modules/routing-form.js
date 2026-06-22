@@ -46,14 +46,15 @@ function addRow(activityName, pax, machine, time) {
              oninput="calculateAll()"
              ${isDisabled}>
     </td>
-    <td class="bg-excel-yellow p-0" style="position:relative;">
+    <td class="bg-excel-yellow p-0 time-input-cell">
       <input type="text"
              class="excel-input time-input"
              value="${time}"
              readonly
              onclick="openTimeFormulaModal(this)"
-             style="cursor:pointer;"
+             style="cursor:pointer;padding-right:1.5rem;"
              ${isDisabled}>
+      <span class="fx-indicator">&#402;</span>
     </td>
 
     <!-- Computed cells -->
@@ -192,19 +193,19 @@ async function saveRoutingDocument() {
   var qty      = document.getElementById('qtyInput')?.value;
   var notes    = document.getElementById('notesInput')?.value.trim() || '';
 
-  // Validation
-  if (!itemCode) {
-    await showModal({ icon: 'danger', title: 'Missing Field', message: 'Please enter an Item Code.', type: 'confirm', confirmLabel: 'OK' });
+  // ── Comprehensive validation: collect ALL problems before showing anything ──
+  const _validationErrors = _validateRoutingForm(itemCode, skuDesc, prodLine, qty);
+  if (_validationErrors.length > 0) {
+    await showModal({
+      icon:         'danger',
+      title:        'Incomplete Data',
+      messageHtml:  _buildValidationHtml(_validationErrors),
+      type:         'confirm',
+      confirmLabel: 'OK',
+    });
     return;
   }
-  if (!skuDesc) {
-    await showModal({ icon: 'danger', title: 'Missing Field', message: 'Please enter an SKU Description.', type: 'confirm', confirmLabel: 'OK' });
-    return;
-  }
-  if (!prodLine) {
-    await showModal({ icon: 'danger', title: 'Missing Field', message: 'Please select a Production Line.', type: 'confirm', confirmLabel: 'OK' });
-    return;
-  }
+  // ─────────────────────────────────────────────────────────────────────────
 
   // Collect activities from table
   var activities = [];
@@ -238,33 +239,54 @@ async function saveRoutingDocument() {
     activities:           activities
   };
 
-  var action = App.currentState === AppState.UPDATE ? 'updated' : 'saved';
+  const isUpdate = App.currentState === AppState.UPDATE;
 
-  // --- Try API first (apiCreateItem / apiUpdateItem handle field mapping internally) ---
+  // --- Try API first ---
+  let apiOk = false;
   try {
-    let res;
-    if (App.currentState === AppState.UPDATE) {
-      res = await apiUpdateItem(itemCode, record);
-    } else {
-      res = await apiCreateItem(record);
-    }
+    const res = isUpdate
+      ? await apiUpdateItem(itemCode, record)
+      : await apiCreateItem(record);
+
     if (!res.ok) {
-      console.warn('[API] Save failed (status ' + res.status + '), saving locally.');
+      // Server returned a definitive error — show modal and abort.
+      // Do NOT fall through to local save; a 4xx means the data was rejected.
+      const errMsg = getApiErrorMessage(
+        res,
+        isUpdate ? 'update item' : 'create item',
+        itemCode
+      );
+      await showModal({
+        icon:         'danger',
+        title:        'Save Failed',
+        message:      errMsg,
+        type:         'confirm',
+        confirmLabel: 'OK',
+      });
+      return; // Stop here — no success toast, no local save
     }
+
+    apiOk = true; // API confirmed the save
   } catch (_) {
+    // Network error (server unreachable) — fall back to local-only save
     console.warn('[API] Unreachable — saving to local mock-db only.');
+    saveRoutingRecord(itemCode, record);
+    clearTabFormState(App.currentState);
+    showToast({
+      type:    'warn',
+      title:   'Saved Offline',
+      message: `${itemCode} — ${skuDesc} could not reach the server and was saved locally only.`,
+      duration: 5000,
+    });
+    return;
   }
 
-  // Always keep local cache in sync
+  // --- API success: keep local cache in sync ---
   saveRoutingRecord(itemCode, record);
-
-  // --- Clear saved tab state for this tab after a successful save ---
   clearTabFormState(App.currentState);
 
-  // Determine friendly action label
-  const actionLabel = App.currentState === AppState.UPDATE ? 'Updated' : 'Added';
-  const actionVerb  = App.currentState === AppState.UPDATE ? 'updated' : 'saved';
-
+  const actionLabel = isUpdate ? 'Updated' : 'Added';
+  const actionVerb  = isUpdate ? 'updated' : 'saved';
   showToast({
     type:    'success',
     title:   `Successfully ${actionLabel}`,
@@ -411,6 +433,144 @@ function openTimeFormulaModal(inputEl) {
   document.addEventListener('keydown', onKey);
 }
 
+/* ============================================
+   FORM VALIDATION HELPERS
+   ============================================ */
+
+/**
+ * Validate every field in the routing form and return an array of error objects.
+ * Each error: { section: string, field: string, reason: string }
+ *
+ * Header fields checked:
+ *   - Item Code        — must not be empty
+ *   - SKU Description  — must not be empty
+ *   - Production Line  — must have a value selected
+ *   - Quantity         — must be a positive number
+ *
+ * Table rows checked (per row):
+ *   - Activity         — must have a selection (not blank)
+ *   - Pax              — must have a value entered (not empty; 0 is allowed)
+ *   - Machine          — must have a value entered (not empty; 0 is allowed)
+ *   - Time             — must be greater than 0
+ *
+ * @param {string} itemCode
+ * @param {string} skuDesc
+ * @param {string} prodLine
+ * @param {string} qty
+ * @returns {Array<{section:string, field:string, reason:string}>}
+ */
+function _validateRoutingForm(itemCode, skuDesc, prodLine, qty) {
+  const errors = [];
+
+  // ── Header / top-of-form fields ──
+  if (!itemCode)
+    errors.push({ section: 'Header', field: 'Item Code', reason: 'required — cannot be blank' });
+
+  if (!skuDesc)
+    errors.push({ section: 'Header', field: 'SKU Description', reason: 'required — cannot be blank' });
+
+  if (!prodLine)
+    errors.push({ section: 'Header', field: 'Production Line', reason: 'required — please select a line' });
+
+  const qtyNum = parseFloat(qty);
+  if (qty === '' || qty === null || qty === undefined || isNaN(qtyNum) || qtyNum <= 0)
+    errors.push({ section: 'Header', field: 'Quantity', reason: 'must be a number greater than zero' });
+
+  // ── Activity table rows ──
+  const rows = document.querySelectorAll('#tableBody tr');
+
+  if (rows.length === 0) {
+    errors.push({ section: 'Activities Table', field: '—', reason: 'at least one activity row is required' });
+  } else {
+    rows.forEach(function(row, i) {
+      const rowLabel   = 'Row ' + (i + 1);
+      const actSelect  = row.querySelector('.activity-select');
+      const paxInput   = row.querySelector('.pax-input');
+      const mcInput    = row.querySelector('.machine-input');
+      const timeInput  = row.querySelector('.time-input');
+
+      const actVal  = actSelect  ? actSelect.value.trim()  : '';
+      const paxVal  = paxInput   ? paxInput.value           : '';
+      const mcVal   = mcInput    ? mcInput.value            : '';
+      const timeVal = timeInput  ? timeInput.value.trim()   : '';
+      const timeNum = parseFloat(timeVal);
+
+      if (!actVal)
+        errors.push({ section: rowLabel, field: 'Activity', reason: 'no activity selected' });
+
+      if (paxVal === '' || paxVal === null || paxVal === undefined)
+        errors.push({ section: rowLabel, field: 'Pax', reason: 'number of workers not entered' });
+
+      if (mcVal === '' || mcVal === null || mcVal === undefined)
+        errors.push({ section: rowLabel, field: 'Machine', reason: 'machine count not entered' });
+
+      if (!timeVal || isNaN(timeNum) || timeNum <= 0)
+        errors.push({ section: rowLabel, field: 'Time', reason: 'must be greater than 0 — open the formula field to set a value' });
+    });
+  }
+
+  return errors;
+}
+
+/**
+ * Build the HTML string shown inside the "Incomplete Data" modal.
+ * Groups errors by section so the user can quickly see what needs fixing.
+ *
+ * @param {Array<{section:string, field:string, reason:string}>} errors
+ * @returns {string} HTML string safe to assign to element.innerHTML
+ */
+function _buildValidationHtml(errors) {
+  // Group errors by section
+  const sections = {};
+  errors.forEach(function(err) {
+    if (!sections[err.section]) sections[err.section] = [];
+    sections[err.section].push(err);
+  });
+
+  let html = '<p style="margin:0 0 0.65rem;font-size:0.875rem;color:#374151;">'
+    + 'Please fill in the highlighted fields before saving:'
+    + '</p>';
+
+  Object.keys(sections).forEach(function(sectionName) {
+    const isRow    = sectionName.startsWith('Row ');
+    const isHeader = sectionName === 'Header';
+
+    // Section heading
+    html += '<p style="margin:0.55rem 0 0.2rem;font-size:0.78rem;font-weight:700;'
+          + 'text-transform:uppercase;letter-spacing:0.05em;'
+          + 'color:' + (isHeader ? '#1d4ed8' : '#b45309') + ';">'
+          + _sanitizeHtml(sectionName)
+          + '</p>';
+
+    // Bullet list for this section
+    html += '<ul style="margin:0 0 0.1rem;padding:0 0 0 1.1rem;list-style:disc;">';
+    sections[sectionName].forEach(function(err) {
+      html += '<li style="font-size:0.84rem;color:#374151;margin-bottom:0.18rem;">'
+            + '<strong>' + _sanitizeHtml(err.field) + '</strong>'
+            + ' — ' + _sanitizeHtml(err.reason)
+            + '</li>';
+    });
+    html += '</ul>';
+  });
+
+  return html;
+}
+
+/**
+ * Minimal HTML escaper for validation strings (field names / reasons).
+ * These strings come from our own code, not from user input, but we sanitize
+ * anyway as a good practice before injecting into innerHTML.
+ * @param {string} str
+ * @returns {string}
+ */
+function _sanitizeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 // Expose globally
 window.addRow                       = addRow;
 window.removeRow                    = removeRow;
@@ -421,3 +581,5 @@ window.updateDelColumnVisibility    = updateDelColumnVisibility;
 window.refreshAllActivityDropdowns  = refreshAllActivityDropdowns;
 window._populateActivitySelect      = _populateActivitySelect;
 window._updateActivityLabel         = _updateActivityLabel;
+window._validateRoutingForm         = _validateRoutingForm;
+window._buildValidationHtml         = _buildValidationHtml;

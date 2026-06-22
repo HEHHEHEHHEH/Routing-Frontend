@@ -124,6 +124,24 @@ const Auth = {
     window.location.reload();
   },
 
+  async confirmLogout() {
+    if (typeof showModal !== 'function') {
+      this.logout();
+      return;
+    }
+
+    const result = await showModal({
+      icon: 'warn',
+      title: 'Log Out',
+      message: 'Are you sure you want to log out?',
+      type: 'confirm',
+      confirmStyle: 'danger',
+      confirmLabel: 'Log Out',
+    });
+
+    if (result.confirmed) this.logout();
+  },
+
   /**
    * GET /api/auth/me — verify the stored token is still valid.
    * @returns {boolean} true if token is valid, false otherwise
@@ -183,89 +201,73 @@ const Auth = {
    ============================================ */
 
 function _renderLoginScreen() {
-  // Only render once
   if (document.getElementById('login-screen')) return;
 
   const screen = document.createElement('div');
   screen.id = 'login-screen';
-  screen.style.cssText = [
-    'position:fixed', 'inset:0', 'z-index:10000',
-    'display:flex', 'align-items:center', 'justify-content:center',
-    'background:#f1f5f9',
-  ].join(';');
+  screen.className = 'login-screen';
 
   screen.innerHTML = `
-    <div style="background:#fff; border-radius:16px; padding:2.5rem 2rem; width:100%; max-width:380px;
-                box-shadow:0 20px 48px rgba(0,0,0,0.12); display:flex; flex-direction:column; gap:0;">
-
-      <!-- Header -->
-      <div style="text-align:center; margin-bottom:1.75rem;">
-        <p style="font-size:0.72rem; font-weight:700; letter-spacing:0.1em; color:#94a3b8;
-                  text-transform:uppercase; margin:0 0 0.35rem;">Pioneer Adhesives Inc.</p>
-        <h1 style="font-size:1.35rem; font-weight:800; color:#0f172a; margin:0 0 0.2rem;">
-          Routing Template System
-        </h1>
-        <p style="font-size:0.82rem; color:#64748b; margin:0;">Sign in to continue</p>
-      </div>
-
-      <!-- Error banner (hidden by default) -->
-      <div id="login-error"
-           style="display:none; background:#fff1f2; border:1px solid #fecdd3; border-radius:8px;
-                  padding:0.6rem 0.85rem; font-size:0.82rem; color:#be123c; margin-bottom:1rem;
-                  line-height:1.45;">
-      </div>
-
-      <!-- Form -->
-      <div style="display:flex; flex-direction:column; gap:1rem;">
-        <div>
-          <label style="display:block; font-size:0.78rem; font-weight:600; color:#374151;
-                        margin-bottom:0.35rem; letter-spacing:0.02em;">Username</label>
-          <input id="login-username" type="text" autocomplete="username"
-                 placeholder="Enter your username"
-                 style="width:100%; border:1px solid #d1d5db; border-radius:8px;
-                        padding:0.6rem 0.8rem; font-size:0.9rem; color:#0f172a;
-                        box-sizing:border-box; outline:none; transition:border-color 0.15s;"
-                 onfocus="this.style.borderColor='#3b82f6'"
-                 onblur="this.style.borderColor='#d1d5db'">
+    <div class="login-screen__hero">
+      <div class="login-screen__hero-overlay"></div>
+      <div class="login-screen__hero-content">
+        <h2 class="login-screen__headline">Routing Headquarters</h2>
+        <div class="login-screen__logo-wrap">
+          <svg viewBox="0 0 1150 120" xmlns="http://www.w3.org/2000/svg" class="login-screen__logo" aria-hidden="true">
+            <path d="M 0 5 L 360 5 C 450 5 450 105 360 105 L 0 105 Z" fill="#da291c" />
+            <g transform="skewX(-16)">
+              <text x="80" y="86" fill="#ffffff" style="font-family:'Arial Black',Impact,system-ui,sans-serif;font-weight:900;font-size:96px;letter-spacing:-2px">
+                <tspan style="font-size:96px">P</tspan><tspan style="font-size:74px;letter-spacing:-1px" dy="-4">ioneer</tspan>
+              </text>
+            </g>
+            <g transform="translate(480, 0)">
+              <text x="0" y="86" fill="#ffffff" style="font-family:'Arial Black',Impact,system-ui,sans-serif;font-weight:900;font-size:76px;letter-spacing:-2.5px;font-style:italic">Adhesives, Inc.</text>
+              <path d="M -10 100 L 590 100 Q 620 100 640 80 Q 620 112 590 112 L -10 112 Z" fill="#94a3b8" />
+            </g>
+          </svg>
         </div>
-        <div>
-          <label style="display:block; font-size:0.78rem; font-weight:600; color:#374151;
-                        margin-bottom:0.35rem; letter-spacing:0.02em;">Password</label>
-          <input id="login-password" type="password" autocomplete="current-password"
-                 placeholder="Enter your password"
-                 style="width:100%; border:1px solid #d1d5db; border-radius:8px;
-                        padding:0.6rem 0.8rem; font-size:0.9rem; color:#0f172a;
-                        box-sizing:border-box; outline:none; transition:border-color 0.15s;"
-                 onfocus="this.style.borderColor='#3b82f6'"
-                 onblur="this.style.borderColor='#d1d5db'">
-        </div>
-
-        <button id="login-btn"
-                onclick="_handleLoginSubmit()"
-                style="margin-top:0.25rem; padding:0.7rem; border-radius:8px; border:none;
-                       background:#2563eb; color:#fff; font-size:0.9rem; font-weight:700;
-                       cursor:pointer; transition:background 0.15s; letter-spacing:0.01em;"
-                onmouseover="this.style.background='#1d4ed8'"
-                onmouseout="this.style.background='#2563eb'">
-          Sign In
-        </button>
       </div>
+    </div>
 
-      <!-- Footer note -->
-      <p style="text-align:center; font-size:0.75rem; color:#94a3b8; margin:1.5rem 0 0;">
-        Contact your administrator if you need access.
-      </p>
+    <div class="login-screen__form-area">
+      <div class="login-screen__form-wrap">
+        <div class="login-form">
+          <div class="login-form__row">
+            <label class="login-form__label" for="login-username">Username</label>
+            <input id="login-username" type="text" autocomplete="username"
+                   class="login-form__input"
+                   placeholder="Enter username">
+          </div>
+
+          <div class="login-form__row">
+            <label class="login-form__label" for="login-password">Password</label>
+            <input id="login-password" type="password" autocomplete="current-password"
+                   class="login-form__input"
+                   placeholder="Enter password">
+          </div>
+
+          <div id="login-error" class="login-form__error hidden"></div>
+
+          <div class="login-form__submit-wrap">
+            <button id="login-btn" type="button" onclick="_handleLoginSubmit()" class="login-form__submit">
+              Login
+            </button>
+          </div>
+
+          <p class="login-form__footer">
+            Contact your administrator if you need access.
+          </p>
+        </div>
+      </div>
     </div>
   `;
 
   document.body.appendChild(screen);
 
-  // Allow Enter key to submit
   screen.addEventListener('keydown', e => {
     if (e.key === 'Enter') _handleLoginSubmit();
   });
 
-  // Focus username field
   setTimeout(() => document.getElementById('login-username')?.focus(), 100);
 }
 
@@ -301,7 +303,7 @@ async function _handleLoginSubmit() {
   const password = passwordEl?.value;
 
   // Clear previous error
-  if (errorEl) { errorEl.style.display = 'none'; errorEl.textContent = ''; }
+  if (errorEl) { errorEl.classList.add('hidden'); errorEl.textContent = ''; }
 
   if (!username || !password) {
     _showLoginError('Please enter both username and password.');
@@ -314,14 +316,14 @@ async function _handleLoginSubmit() {
   const result = await Auth.login(username, password);
 
   if (result.ok) {
-    if (btn) { btn.textContent = 'Sign In'; btn.disabled = false; }
+    if (btn) { btn.textContent = 'Login'; btn.disabled = false; }
     // Resolve the waiting promise in main.js
     if (typeof window._loginSuccessCallback === 'function') {
       window._loginSuccessCallback();
       window._loginSuccessCallback = null;
     }
   } else {
-    if (btn) { btn.textContent = 'Sign In'; btn.disabled = false; }
+    if (btn) { btn.textContent = 'Login'; btn.disabled = false; }
     _showLoginError(result.error);
     if (passwordEl) { passwordEl.value = ''; passwordEl.focus(); }
   }
@@ -331,33 +333,48 @@ function _showLoginError(message) {
   const errorEl = document.getElementById('login-error');
   if (errorEl) {
     errorEl.textContent = message;
-    errorEl.style.display = 'block';
+    errorEl.classList.remove('hidden');
   }
 }
 
-/* ============================================
-   USER BADGE (shown in header after login)
-   ============================================ */
+function _getInitials(username) {
+  if (!username) return '?';
+  const parts = username.trim().split(/[\s._-]+/).filter(Boolean);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+  return username.slice(0, 2).toUpperCase();
+}
 
 function _updateUserBadge(user) {
   const badge = document.getElementById('user-badge');
+  const logoutBtn = document.getElementById('header-logout-btn');
+  const roleBadge = document.getElementById('role-badge');
   if (!badge || !user) return;
-  const roleLabel = { admin: 'Admin', superuser: 'Superuser', user: 'User' }[user.role] || user.role;
-  const roleColor = user.role === 'admin' ? '#dc2626' : '#0369a1';
-  const roleBg    = user.role === 'admin' ? '#fef2f2' : '#e0f2fe';
-  const roleBorder= user.role === 'admin' ? '#fecaca' : '#bae6fd';
+
+  const roleLabel = { admin: 'Admin', superuser: 'Super User', user: 'User' }[user.role] || user.role;
+  const displayName = user.full_name || user.username || 'User';
+
   badge.innerHTML = `
-    <span style="font-size:0.78rem; color:#475569; font-weight:500;">${user.username}</span>
-    <span style="font-size:0.7rem; background:${roleBg}; color:${roleColor}; padding:0.1rem 0.5rem;
-                 border-radius:9999px; font-weight:600; border:1px solid ${roleBorder};">${roleLabel}</span>
-    <button onclick="Auth.logout()"
-            style="font-size:0.75rem; padding:0.2rem 0.65rem; border-radius:6px; border:1px solid #e2e8f0;
-                   background:#f8fafc; color:#64748b; cursor:pointer; font-weight:500;"
-            onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#f8fafc'">
-      Sign Out
-    </button>
+    <div class="user-profile-pill">
+      <div class="user-avatar"><span id="user-initials">${_getInitials(displayName)}</span></div>
+      <div class="user-profile-info">
+        <p id="user-name" class="user-profile-name">${displayName}</p>
+        <p id="user-role-text" class="user-profile-role">${roleLabel}</p>
+      </div>
+    </div>
   `;
-  badge.style.display = 'flex';
+  badge.style.display = 'block';
+
+  if (logoutBtn) logoutBtn.classList.remove('hidden');
+
+  if (roleBadge) {
+    if (user.role === 'admin') {
+      roleBadge.classList.remove('hidden');
+    } else {
+      roleBadge.classList.add('hidden');
+    }
+  }
 }
 
 /* ============================================
@@ -392,7 +409,7 @@ function _refreshAdminTabs() {
 
   Object.entries(tabVisibility).forEach(([id, allowedRoles]) => {
     const el = document.getElementById(id);
-    if (el) el.style.display = allowedRoles.includes(role) ? '' : 'none';
+    if (el) el.style.display = allowedRoles.includes(role) ? 'inline-flex' : 'none';
   });
 
   // Redirect if the user is on a tab their role doesn't allow

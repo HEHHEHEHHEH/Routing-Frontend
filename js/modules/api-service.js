@@ -629,6 +629,68 @@ async function apiCleanupLogs(days) {
 }
 
 /* ============================================
+   SHARED API ERROR MESSAGE HELPER
+   ============================================ */
+
+/**
+ * Convert an API error response into a user-friendly message for modal display.
+ *
+ * Distinction between error types:
+ *   status  0  = network/connection error (server unreachable) — caller should
+ *                save locally and show a warn toast instead of this message.
+ *   status 4xx = definitive client-side rejection — show modal, do NOT proceed.
+ *   status 5xx = server-side failure — show modal, do NOT proceed.
+ *
+ * @param {{ok: boolean, status: number, data: any}} res - Response from _apiFetch
+ * @param {string} [operation] - Short verb phrase, e.g. 'create item', 'delete line'
+ * @param {string} [identifier] - Item code / line code being acted on
+ * @returns {string} Human-readable error message
+ */
+function getApiErrorMessage(res, operation, identifier) {
+  // Prefer the server's own error string when available
+  const serverMsg  = res?.data?.error || '';
+  const idLabel    = identifier ? ` "${identifier}"` : '';
+  const opLabel    = operation  ? ` while trying to ${operation}` : '';
+
+  switch (res.status) {
+    case 400:
+      return serverMsg || `Invalid data${opLabel}. Please check all fields and try again.`;
+
+    case 401:
+      return 'Your session has expired. Please sign in again.';
+
+    case 403:
+      return serverMsg
+        || 'You do not have permission to perform this action. Contact an administrator.';
+
+    case 404:
+      return serverMsg
+        || `The record${idLabel} was not found on the server. It may have been deleted.`;
+
+    case 409:
+      // Most common 409 cases: duplicate key on create, or line still referenced on delete
+      if (serverMsg) return serverMsg;
+      if (identifier) return `"${identifier}" already exists or is still referenced by other records.`;
+      return 'A conflict occurred. The record may already exist or is still in use.';
+
+    case 429:
+      return 'Too many requests. Please wait a moment and try again.';
+
+    case 500:
+      return serverMsg
+        || `Server error (500)${opLabel}. Please try again later or contact your administrator.`;
+
+    case 503:
+      return serverMsg
+        || 'The server is currently unavailable (503). Please retry in a moment.';
+
+    default:
+      return serverMsg
+        || `Unexpected error (HTTP ${res.status})${opLabel}. Please try again.`;
+  }
+}
+
+/* ============================================
    EXPOSE GLOBALLY
    ============================================ */
 window.showLoading             = showLoading;
@@ -660,3 +722,4 @@ window.apiCleanupLogs          = apiCleanupLogs;
 window._normalizeApiItem       = _normalizeApiItem;
 window._mapItemPayload         = _mapItemPayload;
 window._mapItemMetaPayload     = _mapItemMetaPayload;
+window.getApiErrorMessage      = getApiErrorMessage;

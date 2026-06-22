@@ -40,8 +40,15 @@ function showModal(opts) {
     const cancelBtn   = document.getElementById('modalCancelBtn');
     const iconWrap    = document.getElementById('modalIconWrap');
 
-    titleEl.textContent   = opts.title || '';
-    msgEl.textContent     = opts.message || '';
+    titleEl.textContent = opts.title || '';
+
+    // messageHtml lets callers inject a pre-built HTML string (e.g. a bullet list).
+    // Prefer that over plain text when provided.
+    if (opts.messageHtml) {
+      msgEl.innerHTML = opts.messageHtml;
+    } else {
+      msgEl.textContent = opts.message || '';
+    }
 
     // Icon
     iconWrap.innerHTML = '';
@@ -493,10 +500,18 @@ async function handleCreateLine() {
   if (!r2.confirmed) return;
 
   // --- API call ---
+  let apiOk = false;
   try {
     const res = await apiCreateProductionLine({ line_code: cleanCode, description: cleanDesc });
-    if (!res.ok) console.warn('[API] Create line failed:', res.status);
-  } catch (_) { console.warn('[API] Unreachable — creating line locally only.'); }
+    if (!res.ok) {
+      const errMsg = getApiErrorMessage(res, 'create production line', cleanCode);
+      await showModal({ icon: 'danger', title: 'Create Failed', message: errMsg, type: 'confirm', confirmLabel: 'OK' });
+      return;
+    }
+    apiOk = true;
+  } catch (_) {
+    console.warn('[API] Unreachable — creating line locally only.');
+  }
 
   // Keep local cache in sync
   addProductionLine(cleanCode, cleanDesc);
@@ -573,9 +588,15 @@ async function handleEditLine() {
 
 
   // --- API call ---
+  let apiOk = false;
   try {
     const res = await apiRenameProductionLine(selectedLine, { new_line_code: newCode, description: newDesc });
-    if (!res.ok) console.warn('[API] Rename line failed:', res.status);
+    if (!res.ok) {
+      const errMsg = getApiErrorMessage(res, 'update production line', selectedLine);
+      await showModal({ icon: 'danger', title: 'Update Failed', message: errMsg, type: 'confirm', confirmLabel: 'OK' });
+      return;
+    }
+    apiOk = true;
   } catch (_) { console.warn('[API] Unreachable — renaming line locally only.'); }
 
   // Keep local cache in sync
@@ -601,9 +622,15 @@ async function handleDeleteLine() {
   if (!r.confirmed) return;
 
   // --- API call ---
+  let apiOk = false;
   try {
     const res = await apiDeleteProductionLine(selectedLine);
-    if (!res.ok) console.warn('[API] Delete line failed:', res.status);
+    if (!res.ok) {
+      const errMsg = getApiErrorMessage(res, 'delete production line', selectedLine);
+      await showModal({ icon: 'danger', title: 'Delete Failed', message: errMsg, type: 'confirm', confirmLabel: 'OK' });
+      return;
+    }
+    apiOk = true;
   } catch (_) { console.warn('[API] Unreachable — deleting line locally only.'); }
 
   // Keep local cache in sync
@@ -638,9 +665,15 @@ async function addActivityToLine() {
   if (!r.confirmed) return;
 
   // --- API call ---
+  let apiOk = false;
   try {
     const res = await apiAddLineActivity(selectedLine, { activity_name: newAct });
-    if (!res.ok) console.warn('[API] Add activity failed:', res.status);
+    if (!res.ok) {
+      const errMsg = getApiErrorMessage(res, 'add activity', newAct);
+      await showModal({ icon: 'danger', title: 'Add Activity Failed', message: errMsg, type: 'confirm', confirmLabel: 'OK' });
+      return;
+    }
+    apiOk = true;
   } catch (_) { console.warn('[API] Unreachable — adding activity locally only.'); }
 
   // Keep local cache in sync
@@ -665,9 +698,15 @@ async function deleteActivity(line, index) {
   if (!r.confirmed) return;
 
   // --- API call ---
+  let apiOk = false;
   try {
     const res = await apiDeleteLineActivity(line, index);
-    if (!res.ok) console.warn('[API] Delete activity failed:', res.status);
+    if (!res.ok) {
+      const errMsg = getApiErrorMessage(res, 'delete activity', targetAct);
+      await showModal({ icon: 'danger', title: 'Delete Activity Failed', message: errMsg, type: 'confirm', confirmLabel: 'OK' });
+      return;
+    }
+    apiOk = true;
   } catch (_) { console.warn('[API] Unreachable — deleting activity locally only.'); }
 
   // Keep local cache in sync
@@ -705,9 +744,16 @@ async function updateActivityName(line, index, inputElement, originalValue) {
     });
     if (r.confirmed) {
       // --- API call ---
+      let apiOk = false;
       try {
         const res = await apiUpdateLineActivity(line, index, { activity_name: newValue });
-        if (!res.ok) console.warn('[API] Update activity failed:', res.status);
+        if (!res.ok) {
+          const errMsg = getApiErrorMessage(res, 'rename activity', newValue);
+          await showModal({ icon: 'danger', title: 'Rename Failed', message: errMsg, type: 'confirm', confirmLabel: 'OK' });
+          inputElement.value = originalValue; // revert the input
+          return;
+        }
+        apiOk = true;
       } catch (_) { console.warn('[API] Unreachable — updating activity locally only.'); }
 
       // Keep local cache in sync
