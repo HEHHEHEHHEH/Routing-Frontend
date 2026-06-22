@@ -32,7 +32,7 @@
    DELETE /api/production-lines/{line_code}/activities/{id}  Remove one line activity
    ============================================ */
 
-const API_BASE_URL = 'http://192.168.50.119:5000'; // Change to your server URL
+const API_BASE_URL = 'http://192.168.50.59:5000'; // Change to your server URL
 
 /**
  * Internal helper — perform a fetch request and return parsed JSON.

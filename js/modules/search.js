@@ -57,9 +57,10 @@ async function performSearch() {
       setFormEditable(true);
       const itemCodeEl = document.getElementById('itemCode');
       if (itemCodeEl) itemCodeEl.disabled = true;
-      // Show Update/Delete action buttons, hide form-level save button
       _setUpdateActionButtonsVisible(true);
     } else {
+      // LOOKUP mode: populate plain-text display spans
+      _populateLookupDisplay(data);
       setFormEditable(false);
       _setUpdateActionButtonsVisible(false);
     }
@@ -150,6 +151,35 @@ function quickSearch(itemCode) {
   const searchInput = document.getElementById('searchInput');
   if (searchInput) searchInput.value = itemCode;
   performSearch();
+}
+
+/**
+ * Populate the LOOKUP plain-text display spans from a record.
+ * @param {Object} data - The routing record
+ */
+function _populateLookupDisplay(data) {
+  const set = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val || '';
+  };
+
+  set('ld-itemCode', data.inventory_id || '');
+  set('ld-skuDesc',  data.revision_descr || '');
+  set('ld-qty',      data.qty || data.quantity || 1);
+  set('ld-notes',    data.notes || '');
+  set('ld-mode',     data.product_type
+                       ? (data.product_type.includes('Base') ? 'BM' : 'FG')
+                       : (App.currentMode || 'FG'));
+  set('ld-prodLine', data.production_line_code
+                       || data.fg_production_line_code
+                       || data.bm_production_line_code
+                       || '');
+  // Line description from LINE_DESCRIPTIONS lookup
+  const lineCode = data.production_line_code
+                || data.fg_production_line_code
+                || data.bm_production_line_code
+                || '';
+  set('ld-lineDesc', LINE_DESCRIPTIONS[lineCode] || data.production_line || '');
 }
 
 window.performSearch                  = performSearch;

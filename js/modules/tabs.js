@@ -122,6 +122,9 @@ function showRoutingView(viewRouting, viewManage, viewAllData, mode, previousSta
     if (typeof _setUpdateActionButtonsVisible === 'function') {
       _setUpdateActionButtonsVisible(false);
     }
+    // ADD mode: hide notes field, show normal form inputs, hide lookup display
+    _setNotesVisible(false);
+    _setLookupDisplayVisible(false);
 
     // Restore saved state or start fresh
     const restored = restoreTabFormState(AppState.ADD);
@@ -129,7 +132,6 @@ function showRoutingView(viewRouting, viewManage, viewAllData, mode, previousSta
       clearForm();
       setFormEditable(true);
     } else {
-      // Re-apply editable state after restore
       setFormEditable(true);
     }
     updateDelColumnVisibility();
@@ -141,6 +143,9 @@ function showRoutingView(viewRouting, viewManage, viewAllData, mode, previousSta
     if (typeof _setUpdateActionButtonsVisible === 'function') {
       _setUpdateActionButtonsVisible(false);
     }
+    // LOOKUP mode: hide input form, show plain-text display
+    _setNotesVisible(false);
+    _setLookupDisplayVisible(true);
 
     // Restore saved state or start fresh
     const restored = restoreTabFormState(AppState.LOOKUP);
@@ -152,14 +157,16 @@ function showRoutingView(viewRouting, viewManage, viewAllData, mode, previousSta
         searchStatus.className   = 'search-status search-status--neutral';
       }
     } else {
-      // Keep the form read-only; restore editable state appropriately
       setFormEditable(false);
     }
     updateDelColumnVisibility();
 
   } else if (mode === 'update') {
     searchSection.classList.remove('hidden');
-    saveBtn.classList.add('hidden'); // Save button is replaced by Update/Delete buttons in upper right
+    saveBtn.classList.add('hidden');
+    // UPDATE mode: show notes field, show normal form inputs, hide lookup display
+    _setNotesVisible(true);
+    _setLookupDisplayVisible(false);
 
     // Restore saved state or start fresh
     const restored = restoreTabFormState(AppState.UPDATE);
@@ -212,6 +219,37 @@ function showAllDataView(viewRouting, viewManage, viewAllData) {
   loadAndRenderAllData();
 }
 
+/**
+ * Show or hide the notes field (visible in UPDATE/LOOKUP, hidden in ADD).
+ * @param {boolean} visible
+ */
+function _setNotesVisible(visible) {
+  const viewRouting = document.getElementById('view-routing');
+  if (viewRouting) {
+    if (visible) {
+      viewRouting.classList.add('show-notes');
+    } else {
+      viewRouting.classList.remove('show-notes');
+    }
+  }
+}
+
+/**
+ * Toggle between the plain-text lookup display and the editable form-grid.
+ * @param {boolean} showLookup
+ */
+function _setLookupDisplayVisible(showLookup) {
+  const lookupDisplay = document.getElementById('lookup-display');
+  const formGrid      = document.getElementById('form-grid-inputs');
+  const instructions  = document.querySelector('.mode-instructions');
+  if (lookupDisplay) lookupDisplay.style.display = showLookup ? 'block' : 'none';
+  if (formGrid)      formGrid.style.display      = showLookup ? 'none'  : '';
+  // Hide the instructions box in LOOKUP mode (not needed for read-only view)
+  if (instructions)  instructions.style.display  = showLookup ? 'none'  : '';
+}
+
 // Expose globally
 window.switchTab    = switchTab;
 window.routeToView  = routeToView;
+window._setNotesVisible         = _setNotesVisible;
+window._setLookupDisplayVisible = _setLookupDisplayVisible;

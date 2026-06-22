@@ -65,6 +65,11 @@
         background-color: #d1fae5 !important;
       }
 
+      /* Hide notes in ADD mode */
+      .hide-in-add { display: none; }
+      /* Shown in UPDATE/LOOKUP modes */
+      .show-notes .hide-in-add { display: block; }
+
       /* LOOKUP activity cell: hide the <select> widget entirely,
          show value as plain text via the td data-value attribute */
       #routingTable.hide-del td.bg-activity-green {
@@ -172,25 +177,58 @@
           </ul>
         </div>
 
-        <div class="mode-toggle">
-          <span class="font-semibold text-gray-700">Template Mode:</span>
-          <div class="mode-buttons">
-            <button id="btn-fg"
-                    onclick="setMode('FG')"
-                    class="mode-btn mode-btn--active">
-              FG (Finished Goods)
+        <div style="display:flex; align-items:flex-end; gap:1rem; flex-wrap:wrap;">
+          <!-- Update / Delete Buttons — UPDATE mode only, shown after a record is loaded -->
+          <div id="update-action-buttons" style="display:none; gap:0.5rem; align-items:center;">
+            <button onclick="handleDeleteItem()"
+                    style="padding:0.45rem 1rem; border-radius:7px; font-size:0.84rem; font-weight:600; background:#fff; color:#dc2626; border:1px solid #fca5a5; cursor:pointer;"
+                    onmouseover="this.style.background='#fff1f2'" onmouseout="this.style.background='#fff'">
+              Delete
             </button>
-            <button id="btn-bm"
-                    onclick="setMode('BM')"
-                    class="mode-btn">
-              BM (Bulk Material)
+            <button onclick="handleUpdateItem()"
+                    style="padding:0.45rem 1rem; border-radius:7px; font-size:0.84rem; font-weight:600; background:#16a34a; color:#fff; border:none; cursor:pointer;"
+                    onmouseover="this.style.background='#15803d'" onmouseout="this.style.background='#16a34a'">
+              Update
             </button>
+          </div>
+
+          <div class="mode-toggle">
+            <span class="font-semibold text-gray-700">Template Mode:</span>
+            <div class="mode-buttons">
+              <button id="btn-fg"
+                      onclick="setMode('FG')"
+                      class="mode-btn mode-btn--active">
+                FG (Finished Goods)
+              </button>
+              <button id="btn-bm"
+                      onclick="setMode('BM')"
+                      class="mode-btn">
+                BM (Bulk Material)
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Top Form Section -->
-      <div class="form-grid">
+      <!-- LOOKUP plain-text display (shown only in LOOKUP mode) -->
+      <div id="lookup-display" style="display:none; margin-bottom:1.25rem;">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.25rem 2.5rem;">
+          <div>
+            <p style="margin:0 0 0.5rem;"><strong>ITEM CODE:</strong> <span id="ld-itemCode" style="font-weight:500;"></span></p>
+            <p style="margin:0 0 0.5rem;"><strong>SKU Description:</strong> <span id="ld-skuDesc" style="font-weight:500;"></span></p>
+            <p style="margin:0 0 0.5rem;"><strong>FG Qty/Unit:</strong> <span id="ld-qty" style="font-weight:500;"></span></p>
+            <p style="margin:0;"><strong>Notes:</strong> <span id="ld-notes" style="font-weight:500;"></span></p>
+          </div>
+          <div>
+            <p style="margin:0 0 0.5rem;"><strong>Template Mode:</strong> <span id="ld-mode" style="font-weight:500;"></span></p>
+            <p style="margin:0 0 0.5rem;"><strong>Production Line:</strong> <span id="ld-prodLine" style="font-weight:500;"></span></p>
+            <p style="margin:0;"><strong>Line Description:</strong> <span id="ld-lineDesc" style="font-weight:500;"></span></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top Form Section (hidden in LOOKUP mode) -->
+      <div class="form-grid" id="form-grid-inputs">
         <div class="space-y-3">
           <div class="form-group">
             <label for="itemCode">ITEM CODE</label>
@@ -214,9 +252,14 @@
                    value="1"
                    oninput="calculateAll()">
           </div>
-          <!-- Notes field kept as hidden input so JS references still work;
-               not shown in the ADD tab per requirements -->
-          <input type="hidden" id="notesInput" value="">
+          <!-- Notes: shown in LOOKUP and UPDATE, hidden in ADD via .hide-in-add class -->
+          <div class="form-group hide-in-add" id="notesGroup" style="margin-top:0.5rem;">
+            <label for="notesInput">Notes</label>
+            <input type="text"
+                   id="notesInput"
+                   class="bg-excel-yellow"
+                   placeholder="Enter notes (e.g., CRN RD23-CR055)">
+          </div>
         </div>
 
         <div class="space-y-3">
@@ -301,15 +344,7 @@
         </button>
       </div>
 
-      <!-- Update / Delete Buttons (UPDATE mode only, shown after search finds a record) -->
-      <div id="update-action-buttons" class="save-section" style="display:none; gap:0.75rem;">
-        <button onclick="handleDeleteItem()" class="btn btn--danger">
-          Delete Record
-        </button>
-        <button onclick="handleUpdateItem()" class="btn btn--success">
-          Update Routing Document
-        </button>
-      </div>
+
     </div>
 
     <!-- ============================================

@@ -233,6 +233,25 @@ function restoreTabFormState(tabKey) {
   }
 
   calculateAll();
+
+  // If restoring LOOKUP tab, refresh the plain-text display spans
+  if (tabKey === AppState.LOOKUP && saved.itemCode) {
+    // Rebuild a minimal data object from saved state to repopulate the display
+    const lineCode = saved.prodLine || '';
+    const displayData = {
+      inventory_id:         saved.itemCode,
+      revision_descr:       saved.skuDesc,
+      qty:                  saved.qty,
+      notes:                saved.notes || '',
+      production_line_code: lineCode,
+      production_line:      LINE_DESCRIPTIONS[lineCode] || '',
+      product_type:         saved.mode === 'BM' ? 'Base Material (BM)' : 'Finished Good (FG)',
+    };
+    if (typeof _populateLookupDisplay === 'function') {
+      _populateLookupDisplay(displayData);
+    }
+  }
+
   return true;
 }
 
