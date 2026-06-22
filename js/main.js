@@ -29,6 +29,9 @@
 async function initApp() {
   console.log('Pioneer Adhesives Routing System - Initializing...');
 
+  // --- Authentication gate: blocks until user is logged in ---
+  await Auth.init();
+
   // --- Load production lines from API into local cache ---
   try {
     const res = await apiGetProductionLines();

@@ -42,15 +42,26 @@ const API_BASE_URL = 'http://192.168.50.59:5000'; // Change to your server URL
  * @returns {Promise<{ok: boolean, status: number, data: any}>}
  */
 async function _apiFetch(path, method = 'GET', body = null) {
+  // Inject Authorization header from Auth module if a token is stored
+  const authHeaders = (typeof Auth !== 'undefined') ? Auth.authHeaders() : {};
+
   const options = {
     method,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...authHeaders },
   };
   if (body !== null) {
     options.body = JSON.stringify(body);
   }
   try {
     const response = await fetch(API_BASE_URL + path, options);
+
+    // If the server returns 401 (token expired / invalid), force logout
+    if (response.status === 401 && typeof Auth !== 'undefined') {
+      console.warn('[API] 401 Unauthorized — logging out.');
+      Auth.logout();
+      return { ok: false, status: 401, data: null };
+    }
+
     let data = null;
     try { data = await response.json(); } catch (_) {}
     return { ok: response.ok, status: response.status, data };
@@ -58,6 +69,23 @@ async function _apiFetch(path, method = 'GET', body = null) {
     console.error('[API] Network error:', err);
     return { ok: false, status: 0, data: null };
   }
+}
+
+/* ── Auth endpoints ── */
+
+/** POST /api/auth/login */
+async function apiLogin(username, password) {
+  return _apiFetch('/api/auth/login', 'POST', { username, password });
+}
+
+/** GET /api/auth/me */
+async function apiGetMe() {
+  return _apiFetch('/api/auth/me');
+}
+
+/** POST /api/auth/register (admin only) */
+async function apiRegister(username, password, role = 'user') {
+  return _apiFetch('/api/auth/register', 'POST', { username, password, role });
 }
 
 /* ============================================
@@ -453,6 +481,9 @@ async function apiDeleteLineActivity(lineCode, activityId) {
 /* ============================================
    EXPOSE GLOBALLY
    ============================================ */
+window.apiLogin    = apiLogin;
+window.apiGetMe    = apiGetMe;
+window.apiRegister = apiRegister;
 window.apiHealthCheck             = apiHealthCheck;
 window.apiGetItems                = apiGetItems;
 window.apiCreateItem              = apiCreateItem;

@@ -112,6 +112,10 @@
         <h1 class="header-title">PIONEER ADHESIVES INC.</h1>
         <h2 class="header-subtitle">ROUTING TEMPLATE SYSTEM</h2>
       </div>
+      <!-- User badge: populated by auth.js after login -->
+      <div id="user-badge"
+           style="display:none; align-items:center; gap:0.6rem; margin-left:auto;">
+      </div>
     </header>
 
     <!-- ============================================
@@ -584,7 +588,10 @@
        JAVASCRIPT - Modular Architecture
        ============================================ -->
 
-  <!-- Layer 0: API Service -->
+  <!-- Layer 0a: Auth Manager (must load before API service) -->
+  <script src="js/modules/auth.js"></script>
+
+  <!-- Layer 0b: API Service -->
   <script src="js/modules/api-service.js"></script>
 
   <!-- Layer 1: State & Data -->
