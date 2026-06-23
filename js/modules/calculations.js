@@ -114,7 +114,12 @@ function calculateRow(pax, machine, time, qty) {
   var safeMachine = Math.max(machine, 0);
   var safeTime = Math.max(time, 0);
 
-  var runTime = safeQty !== 0 ? (safeTime / safeQty) : 0;
+  // Match Excel: =IFERROR(ROUND(time / qty, 5), 0)
+  // Rounding at compute time (not just display) prevents floating-point drift
+  // when accumulating totals with large FG Qty/Unit values.
+  var runTimeRaw = safeQty !== 0 ? (safeTime / safeQty) : 0;
+  var runTime = Math.round(runTimeRaw * 1e5) / 1e5;
+
   var laborMin = safePax * safeTime;
   var mcMin = safeMachine * safeTime;
 
@@ -123,7 +128,7 @@ function calculateRow(pax, machine, time, qty) {
     dlUnits = safeQty / safeTime;
   }
 
-  // DL, VOH, FOH all equal runTime per business logic
+  // DL, VOH, FOH all equal ROUND(runTime, 5) — matching Excel IFERROR(ROUND(...,5),"")
   var dl = runTime;
   var voh = runTime;
   var foh = runTime;

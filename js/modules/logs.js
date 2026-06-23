@@ -85,7 +85,7 @@ async function loadAuditLogs() {
   if (tbody) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="8" class="text-center" style="padding:2rem;color:#94a3b8;font-style:italic;">
+        <td colspan="9" class="text-center" style="padding:2rem;color:#94a3b8;font-style:italic;">
           Loading audit logs...
         </td>
       </tr>`;
@@ -120,7 +120,7 @@ async function loadAuditLogs() {
       if (tbody) {
         tbody.innerHTML = `
           <tr>
-            <td colspan="8" class="text-center" style="padding:2rem;color:#dc2626;font-style:italic;">
+            <td colspan="9" class="text-center" style="padding:2rem;color:#dc2626;font-style:italic;">
               ${sanitizeInput(msg)}
             </td>
           </tr>`;
@@ -134,7 +134,7 @@ async function loadAuditLogs() {
     if (tbody) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="8" class="text-center" style="padding:2rem;color:#dc2626;font-style:italic;">
+          <td colspan="9" class="text-center" style="padding:2rem;color:#dc2626;font-style:italic;">
             Network error. Could not load audit logs.
           </td>
         </tr>`;
@@ -150,6 +150,21 @@ async function loadAuditLogs() {
    RENDER LOGS TABLE
    ============================================ */
 
+/**
+ * Calculate how many days old a log entry is based on its timestamp.
+ * @param {string} timestamp - The logged_at timestamp string from the API
+ * @returns {string} Number of days old, or '—' if unparseable
+ */
+function _calcDaysOld(timestamp) {
+  if (!timestamp) return '—';
+  const logged = new Date(timestamp);
+  if (isNaN(logged.getTime())) return '—';
+  const now = new Date();
+  const diffMs = now - logged;
+  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  return days < 0 ? '0' : String(days);
+}
+
 function renderAuditLogs() {
   const tbody = document.getElementById('auditLogsTableBody');
   if (!tbody) return;
@@ -161,7 +176,7 @@ function renderAuditLogs() {
   if (logs.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="8" class="text-center" style="padding:2rem;color:#94a3b8;font-style:italic;">
+        <td colspan="9" class="text-center" style="padding:2rem;color:#94a3b8;font-style:italic;">
           No audit log entries found.
         </td>
       </tr>`;
@@ -171,8 +186,14 @@ function renderAuditLogs() {
   logs.forEach(log => {
     const tr = document.createElement('tr');
 
+    // Suppress text-cursor blink when clicking anywhere on the row
+    tr.style.userSelect = 'none';
+
     // Action badge color
     const actionColor = _getActionBadgeColor(log.action);
+
+    // Days old calculation
+    const daysOld = _calcDaysOld(log.logged_at);
 
     // Extra JSON pretty print
     let extraStr = '';
@@ -188,13 +209,65 @@ function renderAuditLogs() {
       <td style="font-size:0.78rem;color:#334155;white-space:nowrap;">${sanitizeInput(log.logged_at || '')}</td>
       <td style="font-size:0.82rem;font-weight:600;color:#1e293b;">${sanitizeInput(log.username || '')}</td>
       <td><span style="display:inline-block;font-size:0.72rem;font-weight:600;padding:0.15rem 0.5rem;border-radius:9999px;${actionColor}">${sanitizeInput(log.action || '')}</span></td>
-      <td style="font-size:0.8rem;color:#475569;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${sanitizeInput(log.description || '')}">${sanitizeInput(log.description || '')}</td>
+      <td style="font-size:0.8rem;color:#475569;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${sanitizeInput(log.description || '')}">${sanitizeInput(_shortenDescription(log.description || ''))}</td>
       <td style="font-size:0.78rem;color:#64748b;">${sanitizeInput(log.target_type || '')}</td>
       <td style="font-size:0.78rem;color:#64748b;">${sanitizeInput(log.target_id || '')}</td>
+      <td style="font-size:0.78rem;color:#64748b;text-align:center;">${sanitizeInput(daysOld)}</td>
       <td style="font-size:0.75rem;color:#94a3b8;font-family:monospace;">${sanitizeInput(log.ip_address || '')}</td>
     `;
     tbody.appendChild(tr);
   });
+}
+
+/**
+ * Shorten a log description by replacing common long words/phrases with
+ * their standard acronyms or abbreviations.
+ * The full original text is preserved in the tooltip (title attribute).
+ * @param {string} desc - Raw description string from the API
+ * @returns {string} Shortened description
+ */
+function _shortenDescription(desc) {
+  if (!desc) return '';
+
+  // Order matters: longer/more-specific phrases first to avoid partial replacements
+  const replacements = [
+    // Strip redundant duplicate: "Finished Good (FG)" → "FG", "Base Material (BM)" → "BM"
+    [/\bFinished\s+Good(?:s)?\s*\(\s*FG\s*\)/gi, 'FG'],
+    [/\bBase\s+Material(?:s)?\s*\(\s*BM\s*\)/gi,  'BM'],
+    // Also catch post-replacement leftover: "FG (FG)" → "FG"
+    [/\b(FG)\s*\(\s*FG\s*\)/gi,              'FG'],
+    [/\b(BM)\s*\(\s*BM\s*\)/gi,              'BM'],
+    // Multi-word phrases → acronym/abbrev
+    [/\bFinished\s+Good(?:s)?\b/gi,           'FG'],
+    [/\bBase\s+Material(?:s)?\b/gi,           'BM'],
+    [/\bProduction\s+Line(?:s)?\b/gi,         'PL'],
+    [/\bRouting\s+(?:Template\s+)?Document(?:s)?\b/gi, 'Routing Doc'],
+    [/\bRouting\s+Record(?:s)?\b/gi,          'Routing Rec'],
+    [/\bUser\s+Account(?:s)?\b/gi,            'User Acct'],
+    [/\bAudit\s+Log(?:s)?\b/gi,              'Audit Log'],
+    [/\bInventory\s+ID\b/gi,                  'Inv. ID'],
+    [/\bItem\s+Code(?:s)?\b/gi,               'Item Code'],
+    [/\bActivity\s+(?:Name\s+)?Updated?\b/gi, 'Act. Upd'],
+    [/\bActivity\s+(?:Name\s+)?Added?\b/gi,   'Act. Added'],
+    [/\bActivity\s+(?:Name\s+)?Deleted?\b/gi, 'Act. Del'],
+    [/\bActivity(?:s)?\b/gi,                  'Act.'],
+    [/\bDescription\b/gi,                     'Desc.'],
+    [/\bCreated?\s+by\b/gi,                   'by'],
+    [/\bUpdated?\s+by\b/gi,                   'by'],
+    [/\bDeleted?\s+by\b/gi,                   'del. by'],
+    [/\bSuccessfully\b/gi,                    'OK'],
+    [/\bAuthentication\b/gi,                  'Auth'],
+    [/\bAdministrator(?:s)?\b/gi,             'Admin'],
+    [/\bPassword\b/gi,                        'Pwd'],
+    [/\bUsername\b/gi,                        'User'],
+  ];
+
+  let result = desc;
+  replacements.forEach(([pattern, replacement]) => {
+    result = result.replace(pattern, replacement);
+  });
+
+  return result;
 }
 
 /**
