@@ -98,6 +98,42 @@ async function handleUpdateItem() {
 }
 
 /**
+ * Handle the Refresh action: discard all unsaved form edits and reload
+ * the original record from the API / local cache.
+ *
+ * This acts as an "undo" for any in-form changes — including accidentally
+ * removed rows — made since the record was last loaded.  Nothing is written
+ * to the database; we simply re-run the search for the current item code.
+ */
+async function handleRefreshItem() {
+  const itemCodeEl = document.getElementById('itemCode');
+  const itemCode   = itemCodeEl?.value.trim();
+  if (!itemCode) return;
+
+  const btn = document.querySelector('.btn-refresh-record');
+
+  // Ask the user to confirm before discarding edits
+  const r = await showModal({
+    icon:         'warning',
+    title:        'Discard Changes?',
+    message:      `This will reload the saved record for "${itemCode}" and discard any unsaved changes, including rows you may have added or deleted. Continue?`,
+    type:         'confirm',
+    confirmLabel: 'Yes, Refresh',
+  });
+  if (!r.confirmed) return;
+
+  // Disable button while loading
+  if (btn) { btn.disabled = true; btn.textContent = '↺ Refreshing…'; }
+
+  // Re-run the search — this re-fetches from API (or falls back to cache)
+  // and calls loadDataIntoForm(), restoring every field and row to the
+  // last-saved state.
+  await performSearch();
+
+  if (btn) { btn.disabled = false; btn.textContent = '↺ Refresh'; }
+}
+
+/**
  * Handle the Delete action: confirm then delete item via API and local cache.
  */
 async function handleDeleteItem() {
@@ -212,4 +248,5 @@ window.handleSearchKeypress           = handleSearchKeypress;
 window.quickSearch                    = quickSearch;
 window._setUpdateActionButtonsVisible = _setUpdateActionButtonsVisible;
 window.handleUpdateItem               = handleUpdateItem;
+window.handleRefreshItem              = handleRefreshItem;
 window.handleDeleteItem               = handleDeleteItem;
