@@ -235,7 +235,7 @@ select:disabled,
 }
 
 .btn--primary:hover {
-  color: #991b1b;
+  color: #b31f1f;
   background-color: var(--pioneer-red-light);
   border-color: #fecaca;
 }
@@ -368,7 +368,7 @@ select:disabled,
 }
 
 .link-action {
-  color: #2563eb;
+  color: var(--pioneer-red);
   font-size: var(--text-sm);
   font-weight: 700;
   background: none;
@@ -387,16 +387,16 @@ select:disabled,
   border-radius: var(--radius-lg);
   font-size: 0.95rem;
   font-weight: 700;
-  background: var(--pioneer-green);
+  background: var(--pioneer-red);
   color: #fff;
   border: none;
   cursor: pointer;
   transition: background 0.15s;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+  box-shadow: 0 4px 12px rgba(185, 28, 28, 0.2);
 }
 
 .btn-update-record:hover {
-  background: var(--pioneer-green-dark);
+  background: var(--pioneer-red-dark);
 }
 
 .btn-delete-record {
@@ -454,7 +454,7 @@ select:disabled,
 }
 
 .formula-modal__fx {
-  color: #2563eb;
+  color: var(--pioneer-red);
   font-family: Georgia, serif;
   font-style: italic;
   font-size: 1.5rem;
@@ -495,7 +495,7 @@ select:disabled,
 .formula-modal__result {
   font-size: 1.875rem;
   font-weight: 900;
-  color: #2563eb;
+  color: var(--pioneer-red);
   font-family: var(--font-mono);
 }
 

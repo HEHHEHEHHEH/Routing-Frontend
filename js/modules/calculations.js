@@ -114,22 +114,22 @@ function calculateRow(pax, machine, time, qty) {
   var safeMachine = Math.max(machine, 0);
   var safeTime = Math.max(time, 0);
 
-  // Match Excel: =IFERROR(ROUND(time / qty, 5), 0)
-  // Rounding at compute time (not just display) prevents floating-point drift
-  // when accumulating totals with large FG Qty/Unit values.
   var runTimeRaw = safeQty !== 0 ? (safeTime / safeQty) : 0;
   var runTime = Math.round(runTimeRaw * 1e5) / 1e5;
 
   var laborMin = safePax * safeTime;
   var mcMin = safeMachine * safeTime;
 
+  // FIX: Apply Excel formula -> ROUNDUP(1 / ROUND(Run Time * Pax, 5), 0)
   var dlUnits = 0;
   if (safeTime > 0) {
-    dlUnits = safeQty / safeTime;
+    var roundedDlBase = Math.round((runTime * safePax) * 1e5) / 1e5;
+    if (roundedDlBase > 0) {
+      dlUnits = Math.ceil(1 / roundedDlBase);
+    }
   }
 
-  // DL, VOH, FOH all equal ROUND(runTime, 5) — matching Excel IFERROR(ROUND(...,5),"")
-  var dl = runTime;
+  var dl = runTime * safePax;
   var voh = runTime;
   var foh = runTime;
 
@@ -137,7 +137,7 @@ function calculateRow(pax, machine, time, qty) {
     runTime: runTime,
     laborMin: laborMin,
     mcMin: mcMin,
-    dlUnits: dlUnits > 0 ? Math.round(dlUnits) : 0,
+    dlUnits: dlUnits,
     dl: dl,
     voh: voh,
     foh: foh
@@ -187,7 +187,7 @@ function calculateAll() {
     if (runTimeCell) runTimeCell.textContent = formatNumber(calc.runTime);
     if (laborMinCell) laborMinCell.textContent = formatNumber(calc.laborMin);
     if (mcMinCell) mcMinCell.textContent = formatNumber(calc.mcMin);
-    if (dlUnitsCell) dlUnitsCell.textContent = calc.dlUnits > 0 ? calc.dlUnits.toString() : '0';
+    if (dlUnitsCell) dlUnitsCell.textContent = formatNumber(calc.dlUnits);
     if (dlCell) dlCell.textContent = formatNumber(calc.dl);
     if (vohCell) vohCell.textContent = formatNumber(calc.voh);
     if (fohCell) fohCell.textContent = formatNumber(calc.foh);

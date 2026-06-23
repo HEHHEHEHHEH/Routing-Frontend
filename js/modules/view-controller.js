@@ -265,7 +265,18 @@ function clearTabFormState(tabKey) {
   }
 }
 
+/**
+ * Show or hide the Clear button bar above the routing table.
+ * Visible in ADD and UPDATE modes only.
+ * @param {boolean} visible
+ */
+function _setClearBtnVisible(visible) {
+  const bar = document.getElementById('clear-btn-bar');
+  if (bar) bar.style.display = visible ? 'flex' : 'none';
+}
+
 // Expose globally
+window._setClearBtnVisible  = _setClearBtnVisible;
 window.setMode              = setMode;
 window.updateLineDescription = updateLineDescription;
 window.setFormEditable      = setFormEditable;

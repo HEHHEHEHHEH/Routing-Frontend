@@ -212,6 +212,8 @@ function showRoutingView(viewRouting, viewManage, viewAllData, mode, previousSta
     if (typeof _setUpdateActionButtonsVisible === 'function') {
       _setUpdateActionButtonsVisible(false);
     }
+    // Show Clear button in ADD mode
+    if (typeof _setClearBtnVisible === 'function') _setClearBtnVisible(true);
     // ADD mode: hide notes field, show normal form inputs, hide lookup display
     _setNotesVisible(false);
     _setLookupDisplayVisible(false);
@@ -233,6 +235,8 @@ function showRoutingView(viewRouting, viewManage, viewAllData, mode, previousSta
     if (typeof _setUpdateActionButtonsVisible === 'function') {
       _setUpdateActionButtonsVisible(false);
     }
+    // Hide Clear button in LOOKUP (read-only)
+    if (typeof _setClearBtnVisible === 'function') _setClearBtnVisible(false);
     // LOOKUP mode: hide input form, show plain-text display
     _setNotesVisible(false);
     _setLookupDisplayVisible(true);
@@ -254,6 +258,8 @@ function showRoutingView(viewRouting, viewManage, viewAllData, mode, previousSta
   } else if (mode === 'update') {
     searchSection.classList.remove('hidden');
     saveBtn.classList.add('hidden');
+    // Hide Clear button in UPDATE mode
+    if (typeof _setClearBtnVisible === 'function') _setClearBtnVisible(false);
     // UPDATE mode: show notes field, show normal form inputs, hide lookup display
     _setNotesVisible(true);
     _setLookupDisplayVisible(false);
@@ -356,10 +362,12 @@ function _setLookupDisplayVisible(showLookup) {
   const lookupDisplay = document.getElementById('lookup-display');
   const formGrid      = document.getElementById('form-grid-inputs');
   const instructions  = document.querySelector('.mode-instructions');
+  const modeToggle    = document.querySelector('.mode-toggle');
   if (lookupDisplay) lookupDisplay.style.display = showLookup ? 'block' : 'none';
   if (formGrid)      formGrid.style.display      = showLookup ? 'none'  : '';
-  // Hide the instructions box in LOOKUP mode (not needed for read-only view)
+  // Hide the instructions box and mode toggle in LOOKUP mode (read-only — not applicable)
   if (instructions)  instructions.style.display  = showLookup ? 'none'  : '';
+  if (modeToggle)    modeToggle.style.display     = showLookup ? 'none'  : '';
 }
 
 // Expose globally

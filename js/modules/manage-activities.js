@@ -408,7 +408,10 @@ function renderManageActivities() {
       numSpan.textContent = String(index + 1).padStart(2, '0');
       numSpan.style.cssText = 'font-size:0.72rem; font-weight:700; color:#94a3b8; min-width:1.5rem; text-align:center;';
 
-      const sanitizedAct = sanitizeInput(act);
+      const activityName = typeof getLineActivityName === 'function'
+        ? getLineActivityName(act)
+        : String(act || '');
+      const sanitizedAct = sanitizeInput(activityName);
       const input = document.createElement('input');
       input.type = 'text';
       input.value = sanitizedAct;
@@ -665,7 +668,7 @@ async function addActivityToLine() {
   if (!r.confirmed) return;
 
   // --- API call ---
-  let apiOk = false;
+  let savedActivity = newAct;
   try {
     const res = await apiAddLineActivity(selectedLine, { activity_name: newAct });
     if (!res.ok) {
@@ -673,11 +676,11 @@ async function addActivityToLine() {
       await showModal({ icon: 'danger', title: 'Add Activity Failed', message: errMsg, type: 'confirm', confirmLabel: 'OK' });
       return;
     }
-    apiOk = true;
+    savedActivity = res.data || { activity_name: newAct };
   } catch (_) { console.warn('[API] Unreachable — adding activity locally only.'); }
 
   // Keep local cache in sync
-  addLineActivity(selectedLine, newAct);
+  addLineActivity(selectedLine, savedActivity);
   input.value = '';
   renderManageActivities();
   showToast({ type: 'success', title: 'Activity Added', message: `"${newAct}" added to line ${selectedLine}.` });
@@ -685,7 +688,13 @@ async function addActivityToLine() {
 
 async function deleteActivity(line, index) {
   const activities = getLineActivities(line);
-  const targetAct  = activities[index];
+  const target     = activities[index];
+  const targetAct  = typeof getLineActivityName === 'function'
+    ? getLineActivityName(target)
+    : String(target || '');
+  const activityId = typeof getLineActivityId === 'function'
+    ? getLineActivityId(target)
+    : null;
 
   const r = await showModal({
     icon: 'danger',
@@ -700,7 +709,7 @@ async function deleteActivity(line, index) {
   // --- API call ---
   let apiOk = false;
   try {
-    const res = await apiDeleteLineActivity(line, index);
+    const res = await apiDeleteLineActivity(line, activityId ?? index);
     if (!res.ok) {
       const errMsg = getApiErrorMessage(res, 'delete activity', targetAct);
       await showModal({ icon: 'danger', title: 'Delete Activity Failed', message: errMsg, type: 'confirm', confirmLabel: 'OK' });
@@ -717,6 +726,11 @@ async function deleteActivity(line, index) {
 
 async function updateActivityName(line, index, inputElement, originalValue) {
   const newValue = inputElement.value.trim().toUpperCase();
+  const activities = getLineActivities(line);
+  const target = activities[index];
+  const activityId = typeof getLineActivityId === 'function'
+    ? getLineActivityId(target)
+    : null;
 
   if (newValue === originalValue) return;
 
@@ -746,7 +760,7 @@ async function updateActivityName(line, index, inputElement, originalValue) {
       // --- API call ---
       let apiOk = false;
       try {
-        const res = await apiUpdateLineActivity(line, index, { activity_name: newValue });
+        const res = await apiUpdateLineActivity(line, activityId ?? index, { activity_name: newValue });
         if (!res.ok) {
           const errMsg = getApiErrorMessage(res, 'rename activity', newValue);
           await showModal({ icon: 'danger', title: 'Rename Failed', message: errMsg, type: 'confirm', confirmLabel: 'OK' });

@@ -5,15 +5,20 @@
 
 :root {
   /* Pioneer Brand */
-  --pioneer-red: #b91c1c;
-  --pioneer-red-dark: #991b1b;
-  --pioneer-red-light: #fef2f2;
+  --pioneer-red: #CE2626;
+  --pioneer-red-dark: #b31f1f;
+  --pioneer-red-light: #FFFDEB;
+  --pioneer-blue: #7DAACB;
+  --pioneer-blue-dark: #6a97b8;
+  --pioneer-beige: #CE2626;
+  --pioneer-beige-dark: #d4c79f;
+  --pioneer-cream: #FFFDEB;
   --pioneer-green: #10b981;
   --pioneer-green-dark: #059669;
 
   /* Legacy aliases */
-  --brand-blue: #b91c1c;
-  --brand-blue-dark: #991b1b;
+  --brand-blue: #CE2626;
+  --brand-blue-dark: #b31f1f;
   --brand-green: #10b981;
   --brand-green-dark: #059669;
 
@@ -37,9 +42,9 @@
   --gray-900: #0f172a;
 
   /* Table Colors */
-  --bom-header: rgba(254, 242, 242, 0.5);
-  --bom-cell: rgba(254, 242, 242, 0.3);
-  --bom-border: #fecaca;
+  --bom-header: rgba(232, 219, 179, 0.5);
+  --bom-cell: rgba(255, 253, 235, 0.6);
+  --bom-border: #d4c79f;
 
   /* Typography */
   --font-sans: system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -100,8 +105,8 @@ body.app-body {
 }
 
 ::selection {
-  background-color: #fee2e2;
-  color: #7f1d1d;
+  background-color: #CE2626;
+  color: #ffffff;
 }
 
 h1, h2, h3, h4, h5, h6 {

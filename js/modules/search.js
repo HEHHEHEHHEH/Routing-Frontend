@@ -53,6 +53,12 @@ async function performSearch() {
       refreshAllActivityDropdowns();
     }
 
+    // Populate revision field (UPDATE tab shows it as a read-only input)
+    const revisionInputEl = document.getElementById('revisionInput');
+    if (revisionInputEl) {
+      revisionInputEl.value = data.revision ? 'Rev. ' + data.revision : '—';
+    }
+
     if (App.currentState === AppState.UPDATE) {
       setFormEditable(true);
       const itemCodeEl = document.getElementById('itemCode');
@@ -185,6 +191,7 @@ function _populateLookupDisplay(data) {
   set('ld-skuDesc',  data.revision_descr || '');
   set('ld-qty',      data.qty || data.quantity || 1);
   set('ld-notes',    data.notes || '');
+  set('ld-revision', data.revision ? 'Rev. ' + data.revision : '—');
   set('ld-mode',     data.product_type
                        ? (data.product_type.includes('Base') ? 'BM' : 'FG')
                        : (App.currentMode || 'FG'));

@@ -113,7 +113,11 @@ function _populateActivitySelect(selectEl, currentValue) {
   selectEl.appendChild(blank);
 
   // Add activities from line
-  activities.forEach(act => {
+  const activityNames = activities.map(act =>
+    typeof getLineActivityName === 'function' ? getLineActivityName(act) : String(act || '')
+  );
+
+  activityNames.forEach(act => {
     const opt = document.createElement('option');
     opt.value = act;
     opt.textContent = act;
@@ -122,7 +126,7 @@ function _populateActivitySelect(selectEl, currentValue) {
   });
 
   // If currentValue is set but not in the list, add it as a custom option
-  if (currentValue && !activities.includes(currentValue)) {
+  if (currentValue && !activityNames.includes(currentValue)) {
     const customOpt = document.createElement('option');
     customOpt.value       = currentValue;
     customOpt.textContent = currentValue;

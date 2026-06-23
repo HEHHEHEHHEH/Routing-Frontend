@@ -52,11 +52,15 @@ async function initApp() {
         if (code) {
           LINE_DESCRIPTIONS[code] = desc;
 
-          // Activities use activity_name field from API
+          // Keep each activity id from the API so edit/delete calls can target
+          // the database row instead of the UI index.
           if (Array.isArray(line.activities) && line.activities.length > 0) {
-            lineActivitiesDB[code] = line.activities.map(a =>
-              a.activity_name || a.name || String(a)
-            );
+            lineActivitiesDB[code] = line.activities.map(a => {
+              if (typeof normalizeLineActivity === 'function') {
+                return normalizeLineActivity(a);
+              }
+              return a.activity_name || a.name || String(a);
+            });
           } else if (!lineActivitiesDB[code]) {
             lineActivitiesDB[code] = [];
           }

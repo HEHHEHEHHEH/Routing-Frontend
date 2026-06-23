@@ -60,9 +60,27 @@
         cursor: default;
         padding: 0.25rem 0.4rem;
       }
-      /* Strip yellow bg → green in LOOKUP */
+
+      /* LOOKUP mode: force full-opacity dark text on ALL table inputs —
+         browsers gray out disabled fields by default; override that entirely */
+      #routingTable.hide-del td input[type="text"],
+      #routingTable.hide-del td input[type="number"] {
+        color: #1e293b !important;
+        -webkit-text-fill-color: #1e293b !important; /* Chrome/Safari disabled override */
+        opacity: 1 !important;
+        font-weight: 500;
+      }
+
+      /* Computed and BOM cells: full-opacity dark readable text */
+      #routingTable.hide-del .cell-computed,
+      #routingTable.hide-del .cell-bom {
+        color: #1e293b !important;
+        opacity: 1 !important;
+        font-weight: 500;
+      }
+      /* Strip yellow bg → #FFFDEB in LOOKUP */
       #routingTable.hide-del td.bg-excel-yellow {
-        background-color: #d1fae5 !important;
+        background-color: #FFFDEB !important;
       }
 
       /* Hide notes in ADD mode */
@@ -88,7 +106,9 @@
         padding: 0.25rem 0.4rem;
         font-size: inherit;
         font-family: inherit;
-        color: #1e293b;
+        color: #1e293b !important;
+        font-weight: 500;
+        opacity: 1 !important;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -96,6 +116,147 @@
       /* In editable mode the label span is hidden */
       td.bg-activity-green .activity-label {
         display: none;
+      }
+
+      
+      /* ============================================
+         ROUTING TABLE — PIONEER BRAND PALETTE
+         #A31E1E — Deep red          → Routing/BOM banners and total row
+         #CE2626 — Pioneer red       → BOM headers / former beige accents
+         #FFFDEB — Cream off-white   → BOM data cell tint
+         ============================================ */
+
+      /* Section banner — ROUTING DETAILS (deep red) */
+      .section-header--routing {
+        background-color: #A31E1E !important;
+        color: #ffffff !important;
+        font-weight: 700 !important;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        border-right: 2px solid #831818 !important;
+        padding: 0.45rem 0.6rem !important;
+      }
+      /* Section banner — ACUMATICA BOM (deep red) */
+      .section-header--bom {
+        background-color: #A31E1E !important;
+        color: #ffffff !important;
+        font-weight: 700 !important;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        padding: 0.45rem 0.6rem !important;
+      }
+      /* DEL header (rowspan=2) — pioneer red */
+      #routingTable thead .col-del {
+        background-color: #CE2626 !important;
+        color: #ffffff !important;
+        font-weight: 700 !important;
+      }
+      /* Column headers row 2 — Routing side (pioneer red) */
+      #routingTable thead tr:nth-child(2) th:not(.th-bom) {
+        background-color: #CE2626 !important;
+        color: #ffffff !important;
+        font-weight: 600 !important;
+        border-right: 1px solid #b31f1f !important;
+        border-bottom: 1px solid #b31f1f !important;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      /* Column headers row 2 — BOM side (pioneer red) */
+      #routingTable thead tr:nth-child(2) th.th-bom {
+        background-color: #CE2626 !important;
+        color: #ffffff !important;
+        font-weight: 600 !important;
+        border-right: 1px solid #b31f1f !important;
+        border-bottom: 1px solid #b31f1f !important;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      /* Activity cells — light red editable state */
+      .bg-activity-green {
+        background-color: #F4B4B4 !important;
+      }
+      #routingTable.hide-del td.bg-activity-green {
+        background-color: #F4B4B4 !important;
+      }
+      /* BOM data cells — cream off-white */
+      td.cell-bom {
+        background-color: #FFFDEB !important;
+      }
+      /* Total footer — deep red */
+      #routingTable tfoot tr td {
+        background-color: #A31E1E !important;
+        color: #ffffff !important;
+        font-weight: 700 !important;
+        border-top: 2px solid #831818 !important;
+      }
+      /* BOM-side tfoot cells — deep red */
+      #routingTable tfoot tr td.cell-bom {
+        background-color: #A31E1E !important;
+        color: #ffffff !important;
+      }
+      /* TOTAL label */
+      #routingTable tfoot .tfoot-total-label {
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        font-weight: 900 !important;
+        color: #ffffff !important;
+        letter-spacing: 0.08em;
+        text-align: right;
+        padding-right: 1rem;
+      }
+      /* LOOKUP mode */
+      #routingTable.hide-del td.cell-bom {
+        background-color: #FFFDEB !important;
+        color: #1e293b !important;
+        opacity: 1 !important;
+        font-weight: 500;
+      }
+
+
+
+      /* ============================================
+         MODE TOGGLE BUTTON COLORS
+         Active: #CE2626 (red), Inactive: #FFFDEB (cream)
+         ============================================ */
+      .mode-btn {
+        background-color: #FFFDEB !important;
+        color: #374151 !important;
+        border: 1px solid #d1a0a0 !important;
+        font-weight: 600;
+      }
+      .mode-btn:hover:not(:disabled) {
+        background-color: #f5e8a0 !important;
+      }
+      .mode-btn--active {
+        background-color: #CE2626 !important;
+        color: #ffffff !important;
+        border-color: #CE2626 !important;
+      }
+
+      /* ============================================
+         CLEAR BUTTON (above table)
+         ============================================ */
+      .btn-clear-form {
+        background: #FFFDEB;
+        color: #CE2626;
+        border: 1.5px solid #CE2626;
+        border-radius: 7px;
+        padding: 0.4rem 1.1rem;
+        font-size: 0.82rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background 0.15s, color 0.15s;
+        letter-spacing: 0.02em;
+      }
+      .btn-clear-form:hover {
+        background: #CE2626;
+        color: #ffffff;
+      }
+      .table-top-bar {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        margin-bottom: 0.5rem;
       }
 
       /* ============================================
@@ -137,7 +298,7 @@
         transition: border-color 0.15s;
       }
       .admin-input:focus {
-        border-color: #b91c1c;
+        border-color: #CE2626;
         box-shadow: 0 0 0 2px rgba(185, 28, 28, 0.15);
       }
       .admin-label {
@@ -158,14 +319,14 @@
         transition: background 0.15s;
       }
       .admin-btn--primary {
-        background: #b91c1c;
+        background: #CE2626;
         color: #fff;
       }
       .admin-btn--primary:hover {
-        background: #991b1b;
+        background: #b31f1f;
       }
       .admin-btn--primary:disabled {
-        background: #93c5fd;
+        background: #fca5a5;
         cursor: not-allowed;
       }
       .admin-btn--danger {
@@ -173,7 +334,7 @@
         color: #fff;
       }
       .admin-btn--danger:hover {
-        background: #b91c1c;
+        background: #CE2626;
       }
       .admin-btn--secondary {
         background: #f1f5f9;
@@ -237,6 +398,16 @@
       .manage-sidebar { background: #f8fafc; padding: 1.25rem; border-radius: 10px; border: 1px solid #e2e8f0; }
       .activity-add-row { padding: 1rem 1.25rem; border-bottom: 1px solid #f1f5f9; background: #fafafa; display: flex; gap: 0.6rem; align-items: center; }
 
+      /* Hide ƒ formula icon in LOOKUP (read-only) mode */
+      #routingTable.hide-del .fx-indicator {
+        display: none !important;
+      }
+      /* In LOOKUP mode, time cells display as plain readable text */
+      #routingTable.hide-del td.time-input-cell input.time-input {
+        cursor: default !important;
+        padding-right: 0.4rem !important;
+      }
+
       /* ── Remove browser spinner arrows from number inputs in the routing table ── */
       .pax-input::-webkit-outer-spin-button,
       .pax-input::-webkit-inner-spin-button,
@@ -281,8 +452,8 @@
 
       <nav class="app-nav" id="main-nav">
         <button id="tab-add" onclick="switchTab('ADD')" class="nav-tab nav-tab--active">Add Record</button>
-        <button id="tab-lookup" onclick="switchTab('LOOKUP')" class="nav-tab nav-tab--inactive">Look Up</button>
         <button id="tab-update" onclick="switchTab('UPDATE')" class="nav-tab nav-tab--inactive">Update Record</button>
+        <button id="tab-lookup" onclick="switchTab('LOOKUP')" class="nav-tab nav-tab--inactive">Look Up</button>
         <button id="tab-manage" onclick="switchTab('MANAGE')" class="nav-tab nav-tab--inactive">Manage Lines</button>
         <button id="tab-alldata" onclick="switchTab('ALLDATA')" class="nav-tab nav-tab--inactive">Database</button>
         <button id="tab-admin" onclick="switchTab('ADMIN')" class="nav-tab nav-tab--inactive" style="display:none;">Admin Panel</button>
@@ -305,16 +476,7 @@
   <main class="app-main">
     <div class="page-title-bar">
       <h1 id="page-title">Add New Routing</h1>
-      <div id="instruction-panel" class="instruction-panel instruction-panel--visible">
-        <div class="instruction-panel__item">
-          <span class="instruction-panel__swatch"></span>
-          Editable Cell
-        </div>
-        <div class="instruction-panel__item">
-          <span class="instruction-panel__fx">&#402;</span>
-          Click to add formula
-        </div>
-      </div>
+
     </div>
 
     <div class="app-content custom-scrollbar">
@@ -342,17 +504,9 @@
         <div id="search-status" class="search-status"></div>
       </div>
 
-      <!-- Mode Selector & Instructions -->
+      <!-- Mode Selector (no instructions) -->
       <div class="mode-selector">
-        <div class="mode-instructions">
-          <h3>INSTRUCTIONS:</h3>
-          <ul>
-            <li><span class="badge-highlight">YELLOW CELLS ONLY</span> - Fill in cells highlighted in YELLOW.</li>
-            <li><strong>DROPDOWN FIRST:</strong> Select the Production Line first.</li>
-          </ul>
-        </div>
-
-        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:0.65rem;">
+        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:0.65rem; width:100%;">
           <!-- Update / Delete Buttons — UPDATE mode only, shown after a record is loaded -->
           <div id="update-action-buttons" style="display:none; align-items:center; gap:0.75rem;">
             <button onclick="handleUpdateItem()" class="btn-update-record">
@@ -388,7 +542,8 @@
             <p style="margin:0 0 0.5rem;"><strong>ITEM CODE:</strong> <span id="ld-itemCode" style="font-weight:500;"></span></p>
             <p style="margin:0 0 0.5rem;"><strong>SKU Description:</strong> <span id="ld-skuDesc" style="font-weight:500;"></span></p>
             <p style="margin:0 0 0.5rem;"><strong>FG Qty/Unit:</strong> <span id="ld-qty" style="font-weight:500;"></span></p>
-            <p style="margin:0;"><strong>Notes:</strong> <span id="ld-notes" style="font-weight:500;"></span></p>
+            <p style="margin:0 0 0.5rem;"><strong>Notes:</strong> <span id="ld-notes" style="font-weight:500;"></span></p>
+            <p style="margin:0;"><strong>Revision:</strong> <span id="ld-revision" style="font-weight:500;"></span></p>
           </div>
           <div>
             <p style="margin:0 0 0.5rem;"><strong>Template Mode:</strong> <span id="ld-mode" style="font-weight:500;"></span></p>
@@ -399,7 +554,8 @@
       </div>
 
       <!-- Top Form Section (hidden in LOOKUP mode) -->
-      <div class="form-grid" id="form-grid-inputs">
+      <div id="form-grid-inputs">
+        <div class="form-grid">
         <div class="space-y-3">
           <div class="form-group">
             <label for="itemCode">ITEM CODE</label>
@@ -423,8 +579,8 @@
                    value="1"
                    oninput="calculateAll()">
           </div>
-          <!-- Notes: shown in LOOKUP and UPDATE, hidden in ADD via .hide-in-add class -->
-          <div class="form-group hide-in-add" id="notesGroup" style="margin-top:0.5rem;">
+          <!-- Notes: shown in UPDATE, hidden in ADD -->
+          <div class="form-group hide-in-add" id="notesGroup">
             <label for="notesInput">Notes</label>
             <input type="text"
                    id="notesInput"
@@ -450,7 +606,23 @@
                    readonly
                    class="bg-gray-50 text-gray-600">
           </div>
+          <!-- Revision: shown in UPDATE mode only -->
+          <div class="form-group hide-in-add" id="revisionGroup">
+            <label for="revisionInput" class="text-gray-500">Revision</label>
+            <input type="text"
+                   id="revisionInput"
+                   readonly
+                   style="background-color:#FFFDEB;color:#1e293b;"
+                   placeholder="—">
+          </div>
         </div>
+        </div><!-- end form-grid -->
+
+      </div><!-- end form-grid-inputs -->
+
+      <!-- Clear Button Bar (ADD mode only) -->
+      <div class="table-top-bar" id="clear-btn-bar">
+        <button class="btn-clear-form" onclick="clearForm()">&#x21BA; Clear</button>
       </div>
 
       <!-- Routing Table -->
@@ -458,8 +630,8 @@
         <table class="excel-table" id="routingTable">
           <thead>
             <tr>
-              <th colspan="7" class="section-header--routing">ROUTING DETAILS</th>
-              <th colspan="6" class="section-header--bom">ACUMATICA BOM</th>
+              <th colspan="8" class="section-header--routing">ROUTING DETAILS</th>
+              <th colspan="5" class="section-header--bom">ACUMATICA BOM</th>
               <th rowspan="2" class="action-column col-del">DEL</th>
             </tr>
             <tr>
@@ -467,15 +639,14 @@
               <th class="w-pax">Pax</th>
               <th class="w-machine">Machine</th>
               <th class="w-time">Time (min)</th>
-              <th class="w-runtime">Run Time</th>
-              <th class="w-unit">Unit</th>
+              <th class="w-runtime" colspan="2">Run Time</th>
               <th class="w-labor">Total Labor min</th>
               <th class="w-mc">Total MC min</th>
-              <th class="w-bom-activity">ACTIVITIES</th>
-              <th class="w-dl-units">DL<br>(UNITS/1 MIN)</th>
-              <th class="w-dl">DL</th>
-              <th class="w-voh">VOH</th>
-              <th class="w-foh">FOH</th>
+              <th class="w-bom-activity th-bom">ACTIVITIES</th>
+              <th class="w-dl-units th-bom">DL<br>(UNITS/1 MIN)</th>
+              <th class="w-dl th-bom">DL</th>
+              <th class="w-voh th-bom">VOH</th>
+              <th class="w-foh th-bom">FOH</th>
             </tr>
           </thead>
           <tbody id="tableBody">
@@ -483,7 +654,7 @@
           </tbody>
           <tfoot>
             <tr>
-              <td class="text-right pr-4" style="color:#64748b;text-transform:uppercase;font-size:0.75rem;font-weight:900;">TOTAL</td>
+              <td class="text-right pr-4 tfoot-total-label">TOTAL</td>
               <td id="sumPax">0</td>
               <td id="sumMachine">0</td>
               <td id="sumTime">0.00000</td>
@@ -550,12 +721,12 @@
             <option value="" disabled selected>-- Choose Line --</option>
           </select>
 
-          <div id="manageLineDesc" style="font-size: 0.8rem; font-weight: 500; color: #475569; background: #e8f0fe; border-left: 3px solid #3b82f6; border-radius: 0 6px 6px 0; padding: 0.45rem 0.7rem; margin-bottom: 1rem; display: none;"></div>
+          <div id="manageLineDesc" style="font-size: 0.8rem; font-weight: 500; color: #475569; background: #FFFDEB; border-left: 3px solid #CE2626; border-radius: 0 6px 6px 0; padding: 0.45rem 0.7rem; margin-bottom: 1rem; display: none;"></div>
 
           <div style="border-top: 1px solid #e2e8f0; padding-top: 1rem; display: flex; flex-direction: column; gap: 0.5rem;">
             <button onclick="handleCreateLine()"
-                    style="width: 100%; padding: 0.55rem; border-radius: 7px; font-size: 0.84rem; font-weight: 600; background: #2563eb; color: #fff; border: none; cursor: pointer; transition: background 0.15s;"
-                    onmouseover="this.style.background='#1d4ed8'" onmouseout="this.style.background='#2563eb'">
+                    style="width: 100%; padding: 0.55rem; border-radius: 7px; font-size: 0.84rem; font-weight: 600; background: #CE2626; color: #ffffff; border: none; cursor: pointer; transition: background 0.15s;"
+                    onmouseover="this.style.background='#b31f1f'" onmouseout="this.style.background='#CE2626'">
               + Create New Line
             </button>
             <button id="btnEditLine" onclick="handleEditLine()"
@@ -928,8 +1099,8 @@
         <button id="timeFormulaCloseBtn" class="formula-modal__close" type="button">&times;</button>
       </div>
       <p style="font-size:0.82rem; color:#64748b; margin:0 0 1.5rem; line-height:1.55; font-weight:600;">
-        Enter a formula like <code style="background:#f1f5f9;padding:0.1rem 0.35rem;border-radius:4px;color:#b91c1c;font-size:0.8rem;">8/60</code> or
-        <code style="background:#f1f5f9;padding:0.1rem 0.35rem;border-radius:4px;color:#b91c1c;font-size:0.8rem;">8/60+3/60</code>.
+        Enter a formula like <code style="background:#f1f5f9;padding:0.1rem 0.35rem;border-radius:4px;color:#CE2626;font-size:0.8rem;">8/60</code> or
+        <code style="background:#f1f5f9;padding:0.1rem 0.35rem;border-radius:4px;color:#CE2626;font-size:0.8rem;">8/60+3/60</code>.
         Supported operators: <code style="background:#f1f5f9;padding:0.1rem 0.35rem;border-radius:4px;color:#475569;font-size:0.8rem;">+ - * / ( )</code>
       </p>
       <label style="display:block;font-size:0.625rem;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:#94a3b8;margin-bottom:0.5rem;">Formula Input</label>
@@ -959,7 +1130,7 @@
       <div id="modalInputWrap" style="display:none; margin-bottom:1rem;">
         <input id="modalInput"
                style="width:100%; border:1px solid #cbd5e1; border-radius:8px; padding:0.55rem 0.8rem; font-size:0.875rem; color:#0f172a; box-sizing:border-box; outline:none;"
-               onfocus="this.style.borderColor='#b91c1c'" onblur="this.style.borderColor='#cbd5e1'">
+               onfocus="this.style.borderColor='#CE2626'" onblur="this.style.borderColor='#cbd5e1'">
       </div>
       <div class="modal-actions">
         <button id="modalCancelBtn"
@@ -968,8 +1139,8 @@
           Cancel
         </button>
         <button id="modalConfirmBtn"
-                style="padding:0.5rem 1.2rem; border-radius:8px; font-size:0.875rem; font-weight:600; background:#b91c1c; color:#fff; border:none; cursor:pointer;"
-                onmouseover="this.style.background='#991b1b'" onmouseout="this.style.background='#b91c1c'">
+                style="padding:0.5rem 1.2rem; border-radius:8px; font-size:0.875rem; font-weight:600; background:#CE2626; color:#fff; border:none; cursor:pointer;"
+                onmouseover="this.style.background='#b31f1f'" onmouseout="this.style.background='#CE2626'">
           Confirm
         </button>
       </div>
