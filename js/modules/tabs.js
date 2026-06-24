@@ -60,7 +60,7 @@ AppState.ALLDATA,
 * then restores the target tab's saved state if available.
 * @param {string} tabId - The AppState value to switch to
 */
-function switchTab(tabId) {
+async function switchTab(tabId) {
 const previousState = App.currentState;
 const role = (Auth.getUser() || {}).role || '';
 
@@ -90,6 +90,14 @@ const userAllowedStates = [AppState.LOOKUP, AppState.ALLDATA];
 if (role === 'user' && !userAllowedStates.includes(tabId)) {
 // Silently redirect to Lookup (their default landing tab)
 tabId = AppState.LOOKUP;
+}
+
+// --- Guard: if leaving MANAGE with unsaved pending changes, ask first ---
+if (previousState === AppState.MANAGE && previousState !== tabId) {
+  if (typeof confirmDiscardManageChanges === 'function') {
+    const ok = await confirmDiscardManageChanges();
+    if (!ok) return; // user chose to stay and keep editing
+  }
 }
 
 // --- Save current tab form state before leaving ---
