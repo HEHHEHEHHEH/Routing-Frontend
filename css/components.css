@@ -9,7 +9,7 @@
   border-spacing: 0;
   width: 100%;
   min-width: 62.5rem;
-  border: 1px solid var(--gray-200);
+  border: 1px solid #000000;
   border-radius: var(--radius-lg);
   overflow: hidden;
   font-size: var(--text-sm);
@@ -17,20 +17,20 @@
 
 .excel-table th,
 .excel-table td {
-  border-bottom: 1px solid var(--gray-200);
-  border-right: 1px solid var(--gray-200);
+  border-bottom: 1px solid #000000;
+  border-right: 1px solid #000000;
   padding: 8px 12px;
   text-align: center;
   vertical-align: middle;
 }
 
 .excel-table th {
-  background-color: var(--gray-50);
+  background-color: var(--pal-teal-mid);
   font-weight: 700;
   font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--gray-600);
+  color: #1e293b;
   white-space: nowrap;
 }
 
@@ -43,19 +43,19 @@
 }
 
 .excel-table .section-header--routing {
-  background-color: var(--gray-100);
+  background-color: var(--pal-teal-ink);
   text-align: left;
   padding-left: var(--space-4);
-  color: var(--gray-700);
-  border-bottom: 2px solid var(--gray-200);
+  color: #ffffff;
+  border-bottom: 2px solid #6f9fab;
   text-transform: uppercase;
 }
 
 .excel-table .section-header--bom {
-  background-color: var(--bom-header);
-  border-left: 1px solid var(--bom-border);
-  color: var(--pioneer-red);
-  border-bottom: 2px solid var(--bom-border);
+  background-color: var(--pal-teal-ink);
+  border-left: 1px solid #6f9fab;
+  color: #ffffff;
+  border-bottom: 2px solid #6f9fab;
   text-transform: uppercase;
 }
 
@@ -68,7 +68,7 @@
 .excel-table th.w-runtime, .excel-table td.w-runtime { width: 6rem; background: #fff; }
 .excel-table th.w-unit, .excel-table td.w-unit { width: 4rem; background: #fff; }
 .excel-table th.w-labor, .excel-table td.w-labor { width: 6rem; background: #fff; }
-.excel-table th.w-mc, .excel-table td.w-mc { width: 6rem; background: #fff; border-right: 1px solid var(--gray-200); }
+.excel-table th.w-mc, .excel-table td.w-mc { width: 6rem; background: #fff; border-right: 1px solid #000000; }
 
 .excel-table th.w-bom-activity,
 .excel-table td.w-bom-activity {
@@ -86,12 +86,12 @@
 .excel-table tfoot tr {
   font-weight: 700;
   font-size: var(--text-sm);
-  background-color: var(--gray-100);
-  color: var(--gray-800);
+  background-color: var(--pal-teal-ink);
+  color: #ffffff;
 }
 
 .excel-table tfoot td {
-  border-top: 2px solid var(--gray-300);
+  border-top: 2px solid #6f9fab;
 }
 
 .excel-table tfoot #sumTime {
@@ -155,23 +155,23 @@
 }
 
 .bg-excel-yellow {
-  background-color: var(--status-yellow) !important;
+  background-color: var(--pal-green-light) !important;
   transition: all 0.2s ease;
 }
 
 .bg-excel-yellow:focus-within:not(:has(input:disabled)):not(:has(select:disabled)) {
-  background-color: var(--status-yellow-focus) !important;
-  box-shadow: inset 0 0 0 2px var(--pioneer-red) !important;
+  background-color: #ffffff !important;
+  box-shadow: inset 0 0 0 2px var(--pal-teal-dark) !important;
   border-radius: 2px;
 }
 
 .bg-activity-green:focus-within:not(:has(select:disabled)) {
-  box-shadow: inset 0 0 0 2px var(--pioneer-red) !important;
+  box-shadow: inset 0 0 0 2px var(--pal-teal-dark) !important;
   border-radius: 2px;
 }
 
 .bg-activity-green {
-  background-color: var(--activity-green) !important;
+  background-color: var(--pal-green-light) !important;
 }
 
 input:disabled,
@@ -217,7 +217,7 @@ select:disabled,
 }
 
 .cell-bom {
-  background-color: var(--bom-cell);
+  background-color: var(--pal-teal-soft);
   color: var(--gray-700);
   font-family: var(--font-mono);
   font-size: var(--text-sm);
@@ -235,7 +235,7 @@ select:disabled,
   width: 3rem;
   text-align: center;
   background: #fff;
-  border-left: 1px solid var(--gray-200);
+  border-left: 1px solid #000000;
 }
 
 /* --- Buttons --- */
@@ -344,16 +344,17 @@ select:disabled,
   text-align: left;
   border-collapse: collapse;
   font-size: var(--text-sm);
+  background: #ffffff;
 }
 
 .data-table thead {
-  background-color: var(--gray-100);
-  color: var(--gray-600);
+  background-color: var(--pal-teal-dark);
+  color: #1e293b;
 }
 
 .data-table thead th {
   padding: 1rem;
-  border-bottom: 1px solid var(--gray-200);
+  border: 1px solid #000000;
   font-weight: 900;
   font-size: var(--text-xs);
   text-transform: uppercase;
@@ -361,18 +362,20 @@ select:disabled,
 }
 
 .data-table tbody tr {
-  border-bottom: 1px solid var(--gray-100);
+  border-bottom: 1px solid #000000;
   transition: background-color 0.15s;
 }
 
 .data-table tbody tr:hover {
-  background-color: var(--gray-50);
+  background-color: #f8fbfc;
 }
 
 .data-table tbody td {
   padding: 1rem;
   color: var(--gray-700);
   font-weight: 500;
+  background: #ffffff;
+  border: 1px solid #000000;
 }
 
 .data-table .col-item-code {
@@ -471,44 +474,33 @@ select:disabled,
   max-width: 440px;
   width: 90%;
   box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
-  border: 1px solid var(--gray-200);
+  border: 1px solid var(--pal-teal-mid);
 }
 
-.formula-modal__title {
-  font-size: var(--text-lg);
-  font-weight: 900;
-  color: var(--gray-800);
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin: 0;
+.formula-modal__panel-header,
+.custom-modal__panel-header {
+  background: var(--pal-teal-dark);
+  color: #1e293b;
+  padding: 1rem 1.5rem;
+  font-weight: 800;
 }
 
-.formula-modal__fx {
-  color: var(--pioneer-red);
-  font-family: Georgia, serif;
-  font-style: italic;
-  font-size: 1.5rem;
+.formula-modal__panel-body,
+.custom-modal__panel-body {
+  padding: 1.5rem;
 }
 
 .formula-modal__input-wrap {
   display: flex;
   align-items: center;
-  border: 2px solid var(--gray-200);
+  border: 2px solid var(--pal-teal-mid);
   border-radius: var(--radius-md);
   transition: border-color 0.2s;
-  background: #fff;
+  background: var(--pal-green-light);
 }
 
 .formula-modal__input-wrap:focus-within {
-  border-color: var(--pioneer-red);
-}
-
-.formula-modal__equals {
-  padding: 0 1rem;
-  color: var(--gray-400);
-  font-weight: 900;
-  font-size: var(--text-lg);
+  border-color: var(--pal-teal-dark);
 }
 
 .formula-modal__input {
@@ -523,15 +515,55 @@ select:disabled,
   background: transparent;
 }
 
+.formula-modal__btn-apply {
+  padding: 0.625rem 1.5rem;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  background: var(--pal-teal-dark);
+  color: #1e293b;
+  border: none;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+}
+
+.formula-modal__btn-apply:hover {
+  background: var(--pal-teal-mid);
+}
+
+.formula-modal__title {
+  font-size: var(--text-lg);
+  font-weight: 900;
+  color: var(--gray-800);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.formula-modal__fx {
+  color: var(--pal-teal-dark);
+  font-family: Georgia, serif;
+  font-style: italic;
+  font-size: 1.5rem;
+}
+
+.formula-modal__equals {
+  padding: 0 1rem;
+  color: var(--gray-400);
+  font-weight: 900;
+  font-size: var(--text-lg);
+}
+
 .formula-modal__result {
   font-size: 1.875rem;
   font-weight: 900;
-  color: var(--pioneer-red);
+  color: var(--pal-teal-dark);
   font-family: var(--font-mono);
 }
 
 .formula-modal__result.is-invalid {
-  color: var(--pioneer-red);
+  color: var(--status-red);
 }
 
 .formula-modal__result.is-empty {
@@ -543,30 +575,14 @@ select:disabled,
   border-radius: var(--radius-md);
   font-weight: 700;
   font-size: var(--text-sm);
-  background: var(--gray-100);
-  color: var(--gray-700);
+  background: var(--pal-teal-soft);
+  color: #1e293b;
   border: none;
   cursor: pointer;
 }
 
 .formula-modal__btn-cancel:hover {
-  background: var(--gray-200);
-}
-
-.formula-modal__btn-apply {
-  padding: 0.625rem 1.5rem;
-  border-radius: var(--radius-md);
-  font-weight: 700;
-  font-size: var(--text-sm);
-  background: var(--pioneer-red);
-  color: #fff;
-  border: none;
-  cursor: pointer;
-  box-shadow: var(--shadow-md);
-}
-
-.formula-modal__btn-apply:hover {
-  background: var(--pioneer-red-dark);
+  background: var(--pal-teal-mid);
 }
 
 .formula-modal__close {
@@ -586,4 +602,92 @@ select:disabled,
 .formula-modal__close:hover {
   background: var(--gray-200);
   color: var(--gray-700);
+}
+
+body.dark-mode .excel-table {
+  border-color: #000000;
+  background: #111f24;
+}
+
+body.dark-mode .excel-table th,
+body.dark-mode .excel-table td,
+body.dark-mode .data-table th,
+body.dark-mode .data-table td {
+  border-color: #000000;
+}
+
+body.dark-mode .excel-table th {
+  background: #074550;
+  color: #f0f6f7;
+}
+
+body.dark-mode .excel-table .section-header--routing,
+body.dark-mode .excel-table .section-header--bom,
+body.dark-mode .excel-table tfoot tr {
+  background: #002f39;
+  color: #ffffff;
+}
+
+body.dark-mode .bg-excel-yellow,
+body.dark-mode .bg-activity-green {
+  background-color: #16272d !important;
+  color: #dff5e4;
+}
+
+body.dark-mode .excel-input,
+body.dark-mode .activity-select {
+  color: #dff5e4;
+}
+
+body.dark-mode .cell-computed,
+body.dark-mode .excel-table th.w-runtime,
+body.dark-mode .excel-table td.w-runtime,
+body.dark-mode .excel-table th.w-unit,
+body.dark-mode .excel-table td.w-unit,
+body.dark-mode .excel-table th.w-labor,
+body.dark-mode .excel-table td.w-labor,
+body.dark-mode .excel-table th.w-mc,
+body.dark-mode .excel-table td.w-mc,
+body.dark-mode .action-column {
+  background: #101b20;
+  color: #f0f6f7;
+}
+
+body.dark-mode .cell-bom,
+body.dark-mode .excel-table th.w-bom-activity,
+body.dark-mode .excel-table td.w-bom-activity,
+body.dark-mode .excel-table th.w-dl-units,
+body.dark-mode .excel-table td.w-dl-units,
+body.dark-mode .excel-table th.w-dl,
+body.dark-mode .excel-table td.w-dl,
+body.dark-mode .excel-table th.w-voh,
+body.dark-mode .excel-table td.w-voh,
+body.dark-mode .excel-table th.w-foh,
+body.dark-mode .excel-table td.w-foh {
+  background: #203238;
+  color: #f0f6f7;
+}
+
+body.dark-mode .data-table {
+  background: #101b20;
+}
+
+body.dark-mode .data-table thead {
+  background: #002f39;
+  color: #ffffff;
+}
+
+body.dark-mode .data-table tbody td {
+  background: #121f24;
+  color: #f0f6f7;
+}
+
+body.dark-mode .data-table tbody tr:hover td {
+  background: #1a3037;
+}
+
+body.dark-mode .link-action,
+body.dark-mode .btn--primary,
+body.dark-mode .btn--add-row {
+  color: #42c7c7;
 }

@@ -247,8 +247,8 @@ if (!restored) {
 clearForm();
 setFormEditable(false);
 if (searchStatus) {
-searchStatus.textContent = 'Search to view a record in Read-Only mode.';
-searchStatus.className   = 'search-status search-status--neutral';
+searchStatus.textContent = '';
+searchStatus.className   = 'search-status';
 }
 } else {
 setFormEditable(false);
@@ -271,8 +271,8 @@ clearForm();
 setFormEditable(false);
 _setUpdateActionButtonsVisible(false);
 if (searchStatus) {
-searchStatus.textContent = 'Search to find a record to edit.';
-searchStatus.className   = 'search-status search-status--neutral';
+searchStatus.textContent = '';
+searchStatus.className   = 'search-status';
 }
 } else {
 // After restore, keep editable only if a record had been loaded
@@ -285,8 +285,8 @@ if (hasRecord) {
 // Item code itself stays locked (can't change it during update)
 if (itemCodeEl) itemCodeEl.disabled = true;
 } else if (searchStatus) {
-searchStatus.textContent = 'Search to find a record to edit.';
-searchStatus.className   = 'search-status search-status--neutral';
+searchStatus.textContent = '';
+searchStatus.className   = 'search-status';
 }
 }
 updateDelColumnVisibility();

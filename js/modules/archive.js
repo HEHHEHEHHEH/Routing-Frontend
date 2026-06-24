@@ -218,7 +218,7 @@ function _archiveShowMessage(message) {
   if (body) {
     body.innerHTML = `
       <div style="text-align:center;padding:3.5rem 1rem;color:#94a3b8;">
-        <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#CE2626"
+        <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#8DBCC7"
              stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"
              style="margin:0 auto 1rem;display:block;opacity:0.4;">
           <path d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7"/>
@@ -313,14 +313,14 @@ function _archiveRenderPage(idx) {
       <div style="overflow-x:auto;border-radius:8px;border:1px solid #e2e8f0;margin-top:0.5rem;">
         <table style="width:100%;border-collapse:collapse;min-width:520px;">
           <thead>
-            <tr style="background:#A31E1E;">
-              <th style="padding:0.42rem 0.7rem;text-align:left;font-size:0.69rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#fff;border-right:1px solid rgba(255,255,255,0.18);">Activity</th>
-              <th style="padding:0.42rem 0.7rem;text-align:center;font-size:0.69rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#fff;border-right:1px solid rgba(255,255,255,0.18);">Pax</th>
-              <th style="padding:0.42rem 0.7rem;text-align:center;font-size:0.69rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#fff;border-right:1px solid rgba(255,255,255,0.18);">Machine</th>
-              <th style="padding:0.42rem 0.7rem;text-align:right;font-size:0.69rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#fff;border-right:1px solid rgba(255,255,255,0.18);">Time (min)</th>
-              <th style="padding:0.42rem 0.7rem;text-align:right;font-size:0.69rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#fff;border-right:1px solid rgba(255,255,255,0.18);">Run Time</th>
-              <th style="padding:0.42rem 0.7rem;text-align:center;font-size:0.69rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#fff;border-right:1px solid rgba(255,255,255,0.18);">Type</th>
-              <th style="padding:0.42rem 0.7rem;text-align:center;font-size:0.69rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#fff;">Class</th>
+            <tr style="background:#8DBCC7;">
+              <th style="padding:0.42rem 0.7rem;text-align:left;font-size:0.69rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#1e293b;border-right:1px solid #A4CCD9;">Activity</th>
+              <th style="padding:0.42rem 0.7rem;text-align:center;font-size:0.69rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#1e293b;border-right:1px solid #A4CCD9;">Pax</th>
+              <th style="padding:0.42rem 0.7rem;text-align:center;font-size:0.69rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#1e293b;border-right:1px solid #A4CCD9;">Machine</th>
+              <th style="padding:0.42rem 0.7rem;text-align:right;font-size:0.69rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#1e293b;border-right:1px solid #A4CCD9;">Time (min)</th>
+              <th style="padding:0.42rem 0.7rem;text-align:right;font-size:0.69rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#1e293b;border-right:1px solid #A4CCD9;">Run Time</th>
+              <th style="padding:0.42rem 0.7rem;text-align:center;font-size:0.69rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#1e293b;border-right:1px solid #A4CCD9;">Type</th>
+              <th style="padding:0.42rem 0.7rem;text-align:center;font-size:0.69rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#1e293b;">Class</th>
             </tr>
           </thead>
           <tbody>${rows}</tbody>
@@ -337,7 +337,7 @@ function _archiveRenderPage(idx) {
   body.innerHTML = `
     <!-- Revision badge + meta -->
     <div style="display:flex;align-items:center;gap:0.85rem;margin-bottom:1.25rem;flex-wrap:wrap;">
-      <div style="background:#A31E1E;color:#fff;border-radius:7px;padding:0.38rem 1.05rem;
+      <div style="background:#8DBCC7;color:#1e293b;border-radius:7px;padding:0.38rem 1.05rem;
                   font-size:0.95rem;font-weight:800;letter-spacing:0.05em;flex-shrink:0;">
         Rev.&nbsp;${revLabel}
       </div>

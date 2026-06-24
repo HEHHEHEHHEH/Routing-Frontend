@@ -33,6 +33,8 @@
 async function initApp() {
   console.log('Pioneer Adhesives Routing System - Initializing...');
 
+  initThemeToggle();
+
   // --- Authentication gate: blocks until user is logged in ---
   await Auth.init();
 
@@ -124,6 +126,39 @@ function handleKeyboardShortcuts(e) {
   }
 }
 
+function initThemeToggle() {
+  const button = document.getElementById('theme-toggle');
+  const savedTheme = localStorage.getItem('routing_theme');
+  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const shouldUseDark = savedTheme ? savedTheme === 'dark' : prefersDark;
+
+  applyTheme(shouldUseDark ? 'dark' : 'light');
+
+  if (!button || button.dataset.bound === 'true') return;
+  button.dataset.bound = 'true';
+  button.addEventListener('click', () => {
+    const nextTheme = document.body.classList.contains('dark-mode') ? 'light' : 'dark';
+    applyTheme(nextTheme);
+    localStorage.setItem('routing_theme', nextTheme);
+  });
+}
+
+function applyTheme(theme) {
+  const isDark = theme === 'dark';
+  document.body.classList.toggle('dark-mode', isDark);
+
+  const button = document.getElementById('theme-toggle');
+  const moonIcon = document.getElementById('theme-icon-moon');
+  const sunIcon = document.getElementById('theme-icon-sun');
+
+  if (moonIcon) moonIcon.classList.toggle('hidden', isDark);
+  if (sunIcon) sunIcon.classList.toggle('hidden', !isDark);
+  if (button) {
+    button.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
+    button.setAttribute('title', isDark ? 'Light mode' : 'Dark mode');
+  }
+}
+
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', initApp);
 document.addEventListener('keydown', handleKeyboardShortcuts);
@@ -131,3 +166,4 @@ document.addEventListener('keydown', handleKeyboardShortcuts);
 // Also expose init function globally for manual re-initialization
 window.initApp = initApp;
 window.populateProdLineSelect = populateProdLineSelect; 
+window.applyTheme = applyTheme;

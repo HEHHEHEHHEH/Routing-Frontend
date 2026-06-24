@@ -42,8 +42,8 @@ data = getRoutingRecord(query);
 }
 
 if (data) {
-statusLabel.textContent = `Record found for ${query}.`;
-statusLabel.className = 'search-status search-status--success';
+statusLabel.textContent = '';
+statusLabel.className = 'search-status';
 
 App.currentRecord = data; // store for activity diffing on update
 

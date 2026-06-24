@@ -390,7 +390,6 @@ function _getInitials(username) {
 
 function _updateUserBadge(user) {
   const badge = document.getElementById('user-badge');
-  const logoutBtn = document.getElementById('header-logout-btn');
   const roleBadge = document.getElementById('role-badge');
   if (!badge || !user) return;
 
@@ -398,17 +397,58 @@ function _updateUserBadge(user) {
   const displayName = user.full_name || user.username || 'User';
 
   badge.innerHTML = `
-    <div class="user-profile-pill">
-      <div class="user-avatar"><span id="user-initials">${_getInitials(displayName)}</span></div>
-      <div class="user-profile-info">
-        <p id="user-name" class="user-profile-name">${displayName}</p>
-        <p id="user-role-text" class="user-profile-role">${roleLabel}</p>
+    <div class="user-profile-menu" id="user-profile-menu">
+      <button type="button"
+              class="user-profile-trigger"
+              id="user-profile-trigger"
+              aria-expanded="false"
+              aria-haspopup="true"
+              aria-label="Open profile menu">
+        <div class="user-avatar"><span id="user-initials">${_getInitials(displayName)}</span></div>
+      </button>
+      <div class="user-profile-dropdown hidden" id="user-profile-dropdown">
+        <p class="user-profile-dropdown__role" id="user-role-text">${roleLabel}</p>
+        <button type="button" class="user-profile-dropdown__logout" id="user-logout-btn">Logout</button>
       </div>
     </div>
   `;
   badge.style.display = 'block';
 
-  if (logoutBtn) logoutBtn.classList.remove('hidden');
+  const trigger = document.getElementById('user-profile-trigger');
+  const dropdown = document.getElementById('user-profile-dropdown');
+  const logoutBtn = document.getElementById('user-logout-btn');
+
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+      _closeProfileDropdown();
+      Auth.confirmLogout();
+    });
+  }
+
+  if (trigger && dropdown) {
+    trigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = !dropdown.classList.contains('hidden');
+      if (isOpen) {
+        _closeProfileDropdown();
+      } else {
+        _openProfileDropdown();
+      }
+    });
+  }
+
+  if (!window._profileDropdownBound) {
+    window._profileDropdownBound = true;
+    document.addEventListener('click', (e) => {
+      const menu = document.getElementById('user-profile-menu');
+      if (menu && !menu.contains(e.target)) {
+        _closeProfileDropdown();
+      }
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') _closeProfileDropdown();
+    });
+  }
 
   if (roleBadge) {
     if (user.role === 'admin') {
@@ -417,6 +457,22 @@ function _updateUserBadge(user) {
       roleBadge.classList.add('hidden');
     }
   }
+}
+
+function _openProfileDropdown() {
+  const trigger = document.getElementById('user-profile-trigger');
+  const dropdown = document.getElementById('user-profile-dropdown');
+  if (!trigger || !dropdown) return;
+  dropdown.classList.remove('hidden');
+  trigger.setAttribute('aria-expanded', 'true');
+}
+
+function _closeProfileDropdown() {
+  const trigger = document.getElementById('user-profile-trigger');
+  const dropdown = document.getElementById('user-profile-dropdown');
+  if (!dropdown) return;
+  dropdown.classList.add('hidden');
+  if (trigger) trigger.setAttribute('aria-expanded', 'false');
 }
 
 /* ============================================
