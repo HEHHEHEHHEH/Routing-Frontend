@@ -266,9 +266,9 @@ select:disabled,
 }
 
 .btn--primary:hover {
-  color: #b31f1f;
-  background-color: var(--pioneer-red-light);
-  border-color: #fecaca;
+  color: var(--pioneer-red-dark);
+  background-color: var(--pal-green-light);
+  border-color: var(--pal-teal-mid);
 }
 
 .btn--success {
@@ -297,7 +297,7 @@ select:disabled,
 
 .btn--danger:hover {
   color: var(--pioneer-red);
-  background-color: var(--pioneer-red-light);
+  background-color: var(--pal-green-light);
 }
 
 .btn--secondary {
@@ -437,13 +437,13 @@ select:disabled,
   font-weight: 700;
   background: #fff;
   color: var(--pioneer-red);
-  border: 1.5px solid #fecaca;
+  border: 1.5px solid var(--pal-teal-mid);
   cursor: pointer;
   transition: background 0.15s;
 }
 
 .btn-delete-record:hover {
-  background: var(--pioneer-red-light);
+  background: var(--pal-green-light);
 }
 
 /* --- Modal styling helpers --- */

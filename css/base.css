@@ -4,23 +4,29 @@
    ============================================ */
 
 :root {
-  /* Pioneer Brand */
-  --pioneer-red: #CE2626;
-  --pioneer-red-dark: #b31f1f;
-  --pioneer-red-light: #FFFDEB;
-  --pioneer-blue: #7DAACB;
-  --pioneer-blue-dark: #6a97b8;
-  --pioneer-beige: #CE2626;
-  --pioneer-beige-dark: #d4c79f;
-  --pioneer-cream: #FFFDEB;
-  --pioneer-green: #10b981;
-  --pioneer-green-dark: #059669;
+  /* Pioneer Brand — New Teal/Green Palette */
+  --pioneer-red: #3A8FA3;          /* primary action: teal-blue (was red) */
+  --pioneer-red-dark: #2d7a8c;     /* primary hover */
+  --pioneer-red-light: #EBFFD8;    /* lightest green tint for backgrounds */
+  --pioneer-blue: #A4CCD9;         /* mid teal */
+  --pioneer-blue-dark: #8DBCC7;    /* darker teal */
+  --pioneer-beige: #C4E1E6;        /* soft teal (was beige) */
+  --pioneer-beige-dark: #A4CCD9;
+  --pioneer-cream: #EBFFD8;        /* light green cream */
+  --pioneer-green: #3A8FA3;
+  --pioneer-green-dark: #2d7a8c;
+
+  /* New palette tokens */
+  --pal-green-light: #EBFFD8;
+  --pal-teal-soft:   #C4E1E6;
+  --pal-teal-mid:    #A4CCD9;
+  --pal-teal-dark:   #8DBCC7;
 
   /* Legacy aliases */
-  --brand-blue: #CE2626;
-  --brand-blue-dark: #b31f1f;
-  --brand-green: #10b981;
-  --brand-green-dark: #059669;
+  --brand-blue: #3A8FA3;
+  --brand-blue-dark: #2d7a8c;
+  --brand-green: #3A8FA3;
+  --brand-green-dark: #2d7a8c;
 
   /* Status Colors */
   --status-yellow: #fffbeb;
@@ -42,9 +48,9 @@
   --gray-900: #0f172a;
 
   /* Table Colors */
-  --bom-header: rgba(232, 219, 179, 0.5);
-  --bom-cell: rgba(255, 253, 235, 0.6);
-  --bom-border: #d4c79f;
+  --bom-header: rgba(164, 204, 217, 0.35);
+  --bom-cell:   rgba(235, 255, 216, 0.55);
+  --bom-border: #A4CCD9;
 
   /* Typography */
   --font-sans: system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -105,7 +111,7 @@ body.app-body {
 }
 
 ::selection {
-  background-color: #CE2626;
+  background-color: #3A8FA3;
   color: #ffffff;
 }
 
@@ -143,7 +149,7 @@ input, select, textarea {
 input:focus, select:focus, textarea:focus {
   outline: none;
   border-color: var(--pioneer-red);
-  box-shadow: 0 0 0 2px rgba(185, 28, 28, 0.15);
+  box-shadow: 0 0 0 2px rgba(58, 143, 163, 0.18);
 }
 
 input:disabled,

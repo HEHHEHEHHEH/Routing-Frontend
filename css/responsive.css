@@ -22,10 +22,6 @@
   .app-header {
     padding: 0 1.5rem;
   }
-
-  .app-logo {
-    margin-right: 1.5rem;
-  }
 }
 
 /* ================================================================
@@ -46,7 +42,7 @@
   }
 
   .nav-tab {
-    padding: 0.45rem 0.85rem;
+    padding: 0 0.85rem;
     font-size: 0.8125rem;
   }
 
@@ -79,7 +75,7 @@
 @media (max-width: 1023px) {
   .app-header {
     height: auto;
-    min-height: 4.5rem;
+    min-height: 4rem;
     padding: 0.5rem 1rem;
     flex-wrap: wrap;
     gap: 0.5rem;
@@ -116,6 +112,13 @@
   .nav-tab {
     padding: 0.4rem 0.75rem;
     font-size: 0.75rem;
+    border-bottom: none;
+    border-radius: var(--radius-md);
+  }
+
+  .nav-tab--active {
+    background-color: var(--pal-green-light);
+    border-bottom: none;
   }
 
   .app-header__right {
