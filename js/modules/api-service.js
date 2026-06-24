@@ -267,8 +267,12 @@ async function apiDeleteItem(itemCode) {
  * Add one new activity to a product.
  * @param {string} itemCode
  * @param {Object} activity - { activity_name, pax, machine, time_min, ... }
+ * @param {Object} [options]
+ * @param {boolean} [options.skipRevision=false] - Append ?skip_revision=1 to suppress
+ *   the revision bump and archive snapshot (used during batch UPDATE saves where the
+ *   metadata PATCH already handled the single revision bump).
  */
-async function apiAddItemActivity(itemCode, activity) {
+async function apiAddItemActivity(itemCode, activity, options) {
   // Map activities field to activity_name if needed
   const body = {
     activity_name: activity.activity_name || activity.activities || activity.name || '',
@@ -280,7 +284,8 @@ async function apiAddItemActivity(itemCode, activity) {
     class: activity.class || 'DL',
     class_1: activity.class_1 || 'DL',
   };
-  return _apiFetch(`/api/items/${encodeURIComponent(itemCode)}/activities`, 'POST', body);
+  const qs = (options && options.skipRevision) ? '?skip_revision=1' : '';
+  return _apiFetch(`/api/items/${encodeURIComponent(itemCode)}/activities${qs}`, 'POST', body);
 }
 
 /**
@@ -289,10 +294,15 @@ async function apiAddItemActivity(itemCode, activity) {
  * @param {string} itemCode
  * @param {string|number} activityId
  * @param {Object} payload - Fields to update
+ * @param {Object} [options]
+ * @param {boolean} [options.skipRevision=false] - Append ?skip_revision=1 to suppress
+ *   the revision bump and archive snapshot (used during batch UPDATE saves where the
+ *   metadata PATCH already handled the single revision bump).
  */
-async function apiUpdateItemActivity(itemCode, activityId, payload) {
+async function apiUpdateItemActivity(itemCode, activityId, payload, options) {
+  const qs = (options && options.skipRevision) ? '?skip_revision=1' : '';
   return _apiFetch(
-    `/api/items/${encodeURIComponent(itemCode)}/activities/${activityId}`,
+    `/api/items/${encodeURIComponent(itemCode)}/activities/${activityId}${qs}`,
     'PATCH',
     payload
   );
@@ -303,10 +313,15 @@ async function apiUpdateItemActivity(itemCode, activityId, payload) {
  * Remove one activity from a product.
  * @param {string} itemCode
  * @param {string|number} activityId
+ * @param {Object} [options]
+ * @param {boolean} [options.skipRevision=false] - Append ?skip_revision=1 to suppress
+ *   the revision bump and archive snapshot (used during batch UPDATE saves where the
+ *   metadata PATCH already handled the single revision bump).
  */
-async function apiDeleteItemActivity(itemCode, activityId) {
+async function apiDeleteItemActivity(itemCode, activityId, options) {
+  const qs = (options && options.skipRevision) ? '?skip_revision=1' : '';
   return _apiFetch(
-    `/api/items/${encodeURIComponent(itemCode)}/activities/${activityId}`,
+    `/api/items/${encodeURIComponent(itemCode)}/activities/${activityId}${qs}`,
     'DELETE'
   );
 }

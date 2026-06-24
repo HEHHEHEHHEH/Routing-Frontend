@@ -311,8 +311,10 @@ async function saveRoutingDocument() {
       });
 
       // 3. Add new activities
+      //    ?skip_revision=1 — the metadata PATCH (step 1) already took the one
+      //    revision bump + archive snapshot for this save operation.
       for (const act of toAdd) {
-        const res = await apiAddItemActivity(itemCode, act);
+        const res = await apiAddItemActivity(itemCode, act, { skipRevision: true });
         if (!res.ok) {
           await showModal({
             icon: 'danger', title: 'Add Activity Failed',
@@ -324,8 +326,9 @@ async function saveRoutingDocument() {
       }
 
       // 4. Delete removed activities
+      //    ?skip_revision=1 — same reason as above; no additional revision bump needed.
       for (const act of toDelete) {
-        const res = await apiDeleteItemActivity(itemCode, act.id);
+        const res = await apiDeleteItemActivity(itemCode, act.id, { skipRevision: true });
         if (!res.ok) {
           await showModal({
             icon: 'danger', title: 'Delete Activity Failed',
@@ -337,6 +340,7 @@ async function saveRoutingDocument() {
       }
 
       // 5. Patch changed activities
+      //    ?skip_revision=1 — same reason as above; no additional revision bump needed.
       for (const act of toUpdate) {
         const res = await apiUpdateItemActivity(itemCode, act.id, {
           activity_name: act.activity_name || act.activities || '',
@@ -347,7 +351,7 @@ async function saveRoutingDocument() {
           class:     act.class     || 'DL',
           class_1:   act.class_1   || 'DL',
           sort_order: act.sort_order,
-        });
+        }, { skipRevision: true });
         if (!res.ok) {
           await showModal({
             icon: 'danger', title: 'Update Activity Failed',

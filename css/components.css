@@ -111,21 +111,47 @@
 }
 
 /* --- Excel Input Cells --- */
+.excel-table td.p-0 {
+  padding: 0 !important;
+}
+
 .excel-input {
+  display: block;
   width: 100%;
-  border: none;
-  outline: none;
-  background: transparent;
+  height: 100%;
+  border: none !important;
+  outline: none !important;
+  background: transparent !important;
   text-align: center;
-  padding: 6px 4px;
+  padding: 8px 12px;
   font-size: var(--text-sm);
   color: var(--gray-800);
   font-weight: 600;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  box-sizing: border-box;
+}
+
+.excel-input:focus {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 .excel-input.text-left {
   text-align: left;
   padding-left: var(--space-2);
+}
+
+.activity-select {
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.activity-select:focus {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 .bg-excel-yellow {
@@ -135,7 +161,12 @@
 
 .bg-excel-yellow:focus-within:not(:has(input:disabled)):not(:has(select:disabled)) {
   background-color: var(--status-yellow-focus) !important;
-  box-shadow: inset 0 0 0 2px var(--pioneer-red);
+  box-shadow: inset 0 0 0 2px var(--pioneer-red) !important;
+  border-radius: 2px;
+}
+
+.bg-activity-green:focus-within:not(:has(select:disabled)) {
+  box-shadow: inset 0 0 0 2px var(--pioneer-red) !important;
   border-radius: 2px;
 }
 

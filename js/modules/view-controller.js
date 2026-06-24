@@ -83,6 +83,10 @@ function setFormEditable(isEditable) {
   document.querySelectorAll('.btn-remove-row').forEach(btn => {
     btn.style.display = isEditable ? 'inline-flex' : 'none';
   });
+
+  if (typeof updateDelColumnVisibility === 'function') {
+    updateDelColumnVisibility();
+  }
 }
 
 /**

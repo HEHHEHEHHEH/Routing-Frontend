@@ -6,18 +6,23 @@
    item code. Accessible from the UPDATE tab only.
 
    Strategy:
-   1. Always show the CURRENT live record first
-      (fetched fresh via GET /api/items/{code}).
-   2. Then load older snapshots from the archive
-      endpoint GET /api/items/{code}/revisions.
-   3. Build a unified list: [current, ...archived]
-      so the modal is always useful even when no
-      archive history exists yet.
+   Shows ONLY the archived revision snapshots from
+   GET /api/items/{code}/revisions — the current
+   live record is intentionally excluded so the
+   user sees the true saved history.
+
+   Duplicate revision numbers in the list are
+   deduplicated (highest archive id wins — most
+   recent snapshot for that revision number).
+
+   Pages are ordered OLDEST → NEWEST so the user
+   navigates forward through history naturally.
 
    API Endpoints used:
-     GET /api/items/{item_code}
      GET /api/items/{item_code}/revisions
+       Response shape: { revisions: [...], total, ... }
      GET /api/items/{item_code}/revisions/{revision}
+       Response shape: { id, revision, snapshot: { ... } }
    ============================================ */
 
 /**
@@ -25,9 +30,10 @@
  */
 const ArchiveState = {
   itemCode:   '',
-  pages:      [],   // Unified list: [{label, source, data|revNum}]
-                    // source: 'live' (data already fetched) | 'archive' (fetch on demand)
-  currentIdx: 0,    // Which page is on screen (0 = newest / current)
+  pages:      [],   // Deduplicated, oldest-first list of archived revisions.
+                    // Each entry: { label, revNum, archiveId, data }
+                    // data is null until the user navigates to that page (lazy fetch).
+  currentIdx: 0,    // Which page is currently displayed (0 = oldest revision).
 };
 
 /* ============================================
@@ -48,7 +54,6 @@ async function openArchiveModal(itemCode) {
   const modal = document.getElementById('archiveModal');
   if (!modal) return;
 
-  // Set title and show loading state
   const titleEl = document.getElementById('archive-modal-item-code');
   if (titleEl) titleEl.textContent = ArchiveState.itemCode;
 
@@ -56,67 +61,56 @@ async function openArchiveModal(itemCode) {
   modal.style.display = 'flex';
   document.body.classList.add('archive-backdrop-blur');
 
-  // ── Step 1: Always fetch the current live record ──────────────────────────
-  let currentData = null;
-  try {
-    const res = await apiGetItem(ArchiveState.itemCode);
-    if (res.ok && res.data) {
-      currentData = _normalizeApiItem(res.data);
-    }
-  } catch (_) { /* fall through */ }
-
-  // Fallback: use App.currentRecord if the live fetch failed
-  if (!currentData && typeof App !== 'undefined' && App.currentRecord) {
-    currentData = App.currentRecord;
-  }
-
-  if (!currentData) {
-    _archiveSetLoading(false);
-    _archiveShowMessage('Could not load the current record for this item code.');
-    return;
-  }
-
-  // Add the live record as the first (newest) page
-  ArchiveState.pages.push({
-    label:  'Current',
-    source: 'live',
-    data:   currentData,
-  });
-
-  // ── Step 2: Try to load older archived revisions ──────────────────────────
+  // ── Fetch the revisions list ───────────────────────────────────────────────
+  // API response shape: { revisions: [...], total, page, per_page, total_pages }
+  // Each entry: { id, inventory_id, revision, archived_at, archived_by }
   try {
     const res = await apiGetItemRevisions(ArchiveState.itemCode);
 
-    if (res.ok && Array.isArray(res.data) && res.data.length > 0) {
-      // Sort archived revisions newest-first (highest number first)
-      const sorted = res.data.slice().sort((a, b) => {
-        const ra = parseInt(a.revision, 10) || 0;
-        const rb = parseInt(b.revision, 10) || 0;
-        return rb - ra;
+    // Handle both array response (old shape) and object with .revisions (new shape)
+    const raw = res.ok
+      ? (Array.isArray(res.data) ? res.data : (res.data?.revisions || []))
+      : [];
+
+    if (raw.length > 0) {
+      // ── Deduplicate: for each revision number keep only the entry with the
+      //    highest archive id (= the most recent snapshot for that rev). ────────
+      const byRev = {};
+      raw.forEach(entry => {
+        const rev = String(entry.revision !== undefined ? entry.revision : '').trim();
+        if (!rev) return;
+        const id  = parseInt(entry.id, 10) || 0;
+        if (!byRev[rev] || id > byRev[rev].id) {
+          byRev[rev] = { ...entry, _revKey: rev, id };
+        }
       });
 
-      // Filter out any revision that matches the live record's revision
-      // (to avoid duplicating the current state)
-      const liveRev = String(currentData.revision || '').trim();
+      // ── Sort OLDEST → NEWEST (ascending revision number) ─────────────────
+      const unique = Object.values(byRev).sort((a, b) => {
+        return (parseInt(a._revKey, 10) || 0) - (parseInt(b._revKey, 10) || 0);
+      });
 
-      sorted.forEach(entry => {
-        const entryRev = String(entry.revision !== undefined ? entry.revision : '').trim();
-        if (liveRev && entryRev === liveRev) return; // skip duplicate
-
+      unique.forEach(entry => {
+        const rev = entry._revKey;
         ArchiveState.pages.push({
-          label:  `Rev. ${String(entryRev).padStart(2, '0')}`,
-          source: 'archive',
-          revNum: entryRev || String(entry.revision_number || ''),
-          data:   null, // fetched lazily when user navigates to this page
+          label:     `Rev. ${String(rev).padStart(2, '0')}`,
+          revNum:    rev,
+          archiveId: entry.id,
+          data:      null,
         });
       });
     }
-    // 404 or empty = no older history — that's fine, we still have the live record
-  } catch (_) { /* ignore — we already have the live record */ }
+  } catch (_) { /* fall through to empty-state below */ }
 
-  // ── Step 3: Render the first page (current live record) ──────────────────
   _archiveSetLoading(false);
-  _archiveRenderPage(0);
+
+  if (ArchiveState.pages.length === 0) {
+    _archiveShowMessage('No archived revisions found for this item. Revisions are created each time the record is saved.');
+    return;
+  }
+
+  // ── Start on the NEWEST (last) revision ───────────────────────────────────
+  await _archiveGoTo(ArchiveState.pages.length - 1);
 }
 
 /**
@@ -129,21 +123,21 @@ function closeArchiveModal() {
 }
 
 /**
- * Navigate to the OLDER revision (higher index = older).
+ * Navigate to the OLDER revision (lower index = older).
  */
 async function archivePrevRevision() {
-  const next = ArchiveState.currentIdx + 1;
-  if (next >= ArchiveState.pages.length) return;
-  await _archiveGoTo(next);
-}
-
-/**
- * Navigate to the NEWER revision (lower index = newer).
- */
-async function archiveNextRevision() {
   const prev = ArchiveState.currentIdx - 1;
   if (prev < 0) return;
   await _archiveGoTo(prev);
+}
+
+/**
+ * Navigate to the NEWER revision (higher index = newer).
+ */
+async function archiveNextRevision() {
+  const next = ArchiveState.currentIdx + 1;
+  if (next >= ArchiveState.pages.length) return;
+  await _archiveGoTo(next);
 }
 
 /* ============================================
@@ -151,20 +145,32 @@ async function archiveNextRevision() {
    ============================================ */
 
 /**
- * Navigate to a specific page index, fetching archive data lazily if needed.
+ * Navigate to a specific page index, fetching snapshot data lazily if needed.
  * @param {number} idx
  */
 async function _archiveGoTo(idx) {
   const page = ArchiveState.pages[idx];
   if (!page) return;
 
-  // 'live' pages already have data; 'archive' pages are fetched on demand
-  if (page.source === 'archive' && !page.data) {
+  if (!page.data) {
     _archiveSetLoading(true);
     try {
+      // GET /api/items/{code}/revisions/{revision}
+      // Response shape: { id, revision, archived_at, archived_by, snapshot: { ... } }
       const res = await apiGetItemRevision(ArchiveState.itemCode, page.revNum);
       if (res.ok && res.data) {
-        page.data = res.data; // cache it
+        // The actual record fields live inside res.data.snapshot
+        const raw      = res.data;
+        const snapshot = raw.snapshot || raw; // fallback: if no .snapshot, use root
+
+        // Merge top-level metadata (archived_at, archived_by) into the snapshot
+        // so _archiveRenderPage can display them without extra field mapping.
+        page.data = {
+          ...snapshot,
+          revision:    raw.revision    ?? snapshot.revision,
+          archived_at: raw.archived_at ?? snapshot.archived_at ?? null,
+          archived_by: raw.archived_by ?? snapshot.archived_by ?? null,
+        };
       } else {
         _archiveSetLoading(false);
         _archiveShowMessage(
@@ -250,26 +256,28 @@ function _archiveRenderPage(idx) {
   }
 
   // ── Field extraction ──────────────────────────────────────────────────────
-  const isLive    = page.source === 'live';
-  const revRaw    = data.revision;
-  const revLabel  = revRaw !== undefined && revRaw !== null
+  const revRaw   = data.revision;
+  const revLabel = revRaw !== undefined && revRaw !== null
     ? String(revRaw).padStart(2, '0')
-    : (isLive ? 'Current' : '—');
-  const lineCode  = data.production_line_code
+    : '—';
+
+  // Production line: snapshot may carry fg_ or bm_ prefixed fields
+  const lineCode = data.production_line_code
     || data.fg_production_line_code
     || data.bm_production_line_code
     || '—';
-  const lineDesc  = data.production_line
+  const lineDesc = data.production_line
     || data.fg_production_line
     || data.bm_production_line
     || (typeof LINE_DESCRIPTIONS !== 'undefined' ? (LINE_DESCRIPTIONS[lineCode] || '') : '')
     || '—';
+
   const isBM      = data.product_type && data.product_type.includes('Base');
   const modeLabel = isBM ? 'Base Material (BM)' : 'Finished Good (FG)';
-  const qty       = data.qty || data.quantity || '—';
+  const qty       = data.qty ?? data.quantity ?? '—';
   const notes     = data.notes || '—';
-  const savedAt   = data.saved_at || data.archived_at || data.created_at || data.updated_at || null;
-  const savedBy   = data.saved_by || data.archived_by || data.created_by || data.updated_by || null;
+  const savedAt   = data.archived_at || data.saved_at || data.created_at || data.updated_at || null;
+  const savedBy   = data.archived_by || data.saved_by || data.created_by || data.updated_by || null;
 
   // ── Activities table ──────────────────────────────────────────────────────
   const activities = Array.isArray(data.activities) ? data.activities : [];
@@ -286,9 +294,9 @@ function _archiveRenderPage(idx) {
       const runTime = qtyNum > 0 && !isNaN(parseFloat(timeRaw))
         ? (parseFloat(timeRaw) / qtyNum).toFixed(5)
         : '—';
-      const type    = act.type  || 'Labor';
-      const cls     = act.class || 'DL';
-      const rowBg   = i % 2 === 0 ? '#ffffff' : '#f8fafc';
+      const type = act.type  || 'Labor';
+      const cls  = act.class || 'DL';
+      const rowBg = i % 2 === 0 ? '#ffffff' : '#f8fafc';
 
       return `<tr style="background:${rowBg};">
         <td style="padding:0.42rem 0.7rem;border-bottom:1px solid #f1f5f9;font-size:0.79rem;color:#1e293b;font-weight:500;">${_archiveSanitize(name)}</td>
@@ -325,19 +333,13 @@ function _archiveRenderPage(idx) {
       </p>`;
   }
 
-  // ── Revision badge colour: green for current live, red for archived ────────
-  const badgeBg = isLive ? '#15803d' : '#A31E1E';
-  const badgeText = isLive
-    ? `&#9679;&nbsp;Current&nbsp;(Rev.&nbsp;${revLabel})`
-    : `Rev.&nbsp;${revLabel}`;
-
-  // ── Full body HTML ────────────────────────────────────────────────────────
+  // ── Render ────────────────────────────────────────────────────────────────
   body.innerHTML = `
     <!-- Revision badge + meta -->
     <div style="display:flex;align-items:center;gap:0.85rem;margin-bottom:1.25rem;flex-wrap:wrap;">
-      <div style="background:${badgeBg};color:#fff;border-radius:7px;padding:0.38rem 1.05rem;
+      <div style="background:#A31E1E;color:#fff;border-radius:7px;padding:0.38rem 1.05rem;
                   font-size:0.95rem;font-weight:800;letter-spacing:0.05em;flex-shrink:0;">
-        ${badgeText}
+        Rev.&nbsp;${revLabel}
       </div>
       ${savedAt ? `
         <span style="font-size:0.77rem;color:#64748b;background:#f8fafc;border:1px solid #e2e8f0;
@@ -358,7 +360,7 @@ function _archiveRenderPage(idx) {
       <div>
         ${_archiveField('Item Code',       data.inventory_id   || '—', true)}
         ${_archiveField('SKU Description', data.revision_descr || '—', true)}
-        ${_archiveField('Quantity',        String(qty))}
+        ${_archiveField('Quantity',        qty !== null && qty !== undefined ? String(qty) : '—')}
         ${_archiveField('Notes',           notes)}
       </div>
       <div>
@@ -383,12 +385,61 @@ function _archiveRenderPage(idx) {
   // ── Pagination controls ───────────────────────────────────────────────────
   if (pagi) pagi.style.display = 'flex';
   if (infoEl) {
-    const pageNum  = idx + 1;
-    const pageLabel = isLive ? 'Current' : page.label;
-    infoEl.textContent = `${pageLabel}  (${pageNum} of ${total})`;
+    infoEl.textContent = `${page.label}  (${idx + 1} of ${total})`;
   }
-  if (prevBtn) prevBtn.disabled = (idx >= total - 1);
-  if (nextBtn) nextBtn.disabled = (idx <= 0);
+  // Older = lower index; Newer = higher index
+  if (prevBtn) prevBtn.disabled = (idx <= 0);
+  if (nextBtn) nextBtn.disabled = (idx >= total - 1);
+
+  // Render individual page buttons
+  const pagesListEl = document.getElementById('archive-pages-list');
+  if (pagesListEl) {
+    const range = [];
+    const delta = 2; // Show current page +/- delta
+    for (let i = 0; i < total; i++) {
+      if (i === 0 || i === total - 1 || (i >= idx - delta && i <= idx + delta)) {
+        range.push(i);
+      }
+    }
+
+    let last = null;
+    const htmlParts = [];
+    for (const i of range) {
+      if (last !== null) {
+        if (i - last === 2) {
+          // Exactly one missing number, just render it instead of ellipsis
+          const missingIdx = last + 1;
+          const mPage = ArchiveState.pages[missingIdx];
+          const mLabel = mPage.revNum !== undefined ? String(mPage.revNum).padStart(2, '0') : String(missingIdx + 1).padStart(2, '0');
+          htmlParts.push(`
+            <button class="archive-page-btn" 
+                    onclick="window._archiveGoTo(${missingIdx})"
+                    title="${mPage.label}">
+              ${mLabel}
+            </button>
+          `);
+        } else if (i - last > 2) {
+          htmlParts.push(`<span class="archive-ellipsis">&hellip;</span>`);
+        }
+      }
+
+      const pageEl = ArchiveState.pages[i];
+      const isActive = (i === idx);
+      const activeClass = isActive ? 'active' : '';
+      const label = pageEl.revNum !== undefined ? String(pageEl.revNum).padStart(2, '0') : String(i + 1).padStart(2, '0');
+      
+      htmlParts.push(`
+        <button class="archive-page-btn ${activeClass}" 
+                onclick="window._archiveGoTo(${i})"
+                title="${pageEl.label}"
+                ${isActive ? 'disabled' : ''}>
+          ${label}
+        </button>
+      `);
+      last = i;
+    }
+    pagesListEl.innerHTML = htmlParts.join('');
+  }
 }
 
 /* ============================================
@@ -396,7 +447,7 @@ function _archiveRenderPage(idx) {
    ============================================ */
 
 function _archiveField(label, value, bold) {
-  const val = _archiveSanitize(value);
+  const val = _archiveSanitize(String(value ?? '—'));
   return `
     <p style="margin:0 0 0.5rem;font-size:0.81rem;">
       <span style="font-size:0.67rem;font-weight:700;text-transform:uppercase;
@@ -433,6 +484,7 @@ window.openArchiveModal    = openArchiveModal;
 window.closeArchiveModal   = closeArchiveModal;
 window.archivePrevRevision = archivePrevRevision;
 window.archiveNextRevision = archiveNextRevision;
+window._archiveGoTo        = _archiveGoTo;
 
 // Close on Escape key
 document.addEventListener('keydown', function(e) {

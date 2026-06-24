@@ -46,6 +46,12 @@ async function performSearch() {
     statusLabel.className = 'search-status search-status--success';
 
     App.currentRecord = data; // store for activity diffing on update
+    
+    // Set editable state based on current AppState BEFORE loading data into the form.
+    // This ensures addRow() creates rows in the correct editable/disabled state initially.
+    const isUpdate = App.currentState === AppState.UPDATE;
+    setFormEditable(isUpdate);
+
     loadDataIntoForm(data);
 
     // Refresh dropdowns AFTER loadDataIntoForm has set the production line value,
@@ -60,15 +66,13 @@ async function performSearch() {
       revisionInputEl.value = data.revision ? 'Rev. ' + data.revision : '—';
     }
 
-    if (App.currentState === AppState.UPDATE) {
-      setFormEditable(true);
+    if (isUpdate) {
       const itemCodeEl = document.getElementById('itemCode');
       if (itemCodeEl) itemCodeEl.disabled = true;
       _setUpdateActionButtonsVisible(true);
     } else {
       // LOOKUP mode: populate plain-text display spans
       _populateLookupDisplay(data);
-      setFormEditable(false);
       _setUpdateActionButtonsVisible(false);
     }
   } else {
@@ -96,7 +100,26 @@ function _setUpdateActionButtonsVisible(visible) {
  * Identical to saveRoutingDocument() but always treats state as UPDATE.
  */
 async function handleUpdateItem() {
+  const itemCode = document.getElementById('itemCode')?.value.trim();
+  if (!itemCode) return;
+
+  // ── Confirmation modal before proceeding ──────────────────────────────────
+  const result = await showModal({
+    icon:         'warn',
+    title:        'Confirm Update',
+    message:      `You are about to update the routing record for "${itemCode}". Do you want to continue?`,
+    type:         'confirm',
+    confirmLabel: 'Yes, Update',
+  });
+  if (!result.confirmed) return;
+
+  // ── Perform the save ──────────────────────────────────────────────────────
   await saveRoutingDocument();
+
+  // ── Auto-reload: re-fetch the saved record so the form shows the latest
+  //    data (bumped revision number, server-assigned activity IDs, etc.)
+  //    without requiring a manual page refresh. ──────────────────────────────
+  await performSearch();
 }
 
 /**

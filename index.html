@@ -58,7 +58,7 @@
         -webkit-appearance: none;
         appearance: none;
         cursor: default;
-        padding: 0.25rem 0.4rem;
+        padding: 8px 12px;
       }
 
       /* LOOKUP mode: force full-opacity dark text on ALL table inputs —
@@ -86,7 +86,7 @@
       /* Hide notes in ADD mode */
       .hide-in-add { display: none; }
       /* Shown in UPDATE/LOOKUP modes */
-      .show-notes .hide-in-add { display: block; }
+      .show-notes .hide-in-add { display: flex; }
 
       /* LOOKUP activity cell: hide the <select> widget entirely,
          show value as plain text via the td data-value attribute */
@@ -103,7 +103,7 @@
       #routingTable.hide-del td.bg-activity-green .activity-label {
         display: inline-block;
         width: 100%;
-        padding: 0.25rem 0.4rem;
+        padding: 8px 12px;
         font-size: inherit;
         font-family: inherit;
         color: #1e293b !important;
@@ -465,6 +465,47 @@
         opacity: 0.38;
         cursor: not-allowed;
       }
+      .archive-page-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 2.1rem;
+        height: 2.1rem;
+        padding: 0 0.45rem;
+        border-radius: 6px;
+        border: 1px solid #e2e8f0;
+        background: #ffffff;
+        color: #334155;
+        font-size: 0.82rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.15s ease;
+      }
+      .archive-page-btn:hover:not(:disabled) {
+        background: #A31E1E;
+        color: #ffffff;
+        border-color: #A31E1E;
+      }
+      .archive-page-btn.active {
+        background: #A31E1E;
+        color: #ffffff;
+        border-color: #A31E1E;
+        cursor: default;
+      }
+      .archive-page-btn:disabled:not(.active) {
+        opacity: 0.38;
+        cursor: not-allowed;
+      }
+      .archive-ellipsis {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 2.1rem;
+        height: 2.1rem;
+        color: #64748b;
+        font-weight: 700;
+        font-size: 0.82rem;
+      }
       .table-top-bar {
         display: flex;
         justify-content: flex-end;
@@ -618,7 +659,7 @@
       /* In LOOKUP mode, time cells display as plain readable text */
       #routingTable.hide-del td.time-input-cell input.time-input {
         cursor: default !important;
-        padding-right: 0.4rem !important;
+        padding-right: 12px !important;
       }
 
       /* ── Remove browser spinner arrows from number inputs in the routing table ── */
@@ -1362,9 +1403,14 @@
                 disabled>
           ← Newer
         </button>
-        <span id="archive-page-info" style="font-size:0.82rem;font-weight:600;color:#64748b;">
-          Version — of —
-        </span>
+        <div style="display:flex; align-items:center; gap:1.25rem; flex-wrap:wrap; justify-content:center;">
+          <div id="archive-pages-list" style="display:flex; align-items:center; gap:0.35rem; flex-wrap:wrap; justify-content:center;">
+            <!-- Page buttons will be generated here dynamically -->
+          </div>
+          <span id="archive-page-info" style="font-size:0.82rem;font-weight:600;color:#64748b;">
+            Version — of —
+          </span>
+        </div>
         <button id="archive-btn-prev"
                 class="archive-nav-btn"
                 onclick="archivePrevRevision()"
