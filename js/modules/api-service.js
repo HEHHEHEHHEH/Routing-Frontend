@@ -41,7 +41,7 @@
    DELETE /api/logs/cleanup                                 Purge old log entries
    ============================================ */
 
-const API_BASE_URL = 'http://192.168.50.93:5000'; // Change to your server URL
+const API_BASE_URL = 'http://192.168.50.82:8080'; // Change to your server URL
 
 /* ============================================
    LOADING ANIMATION SYSTEM
@@ -171,6 +171,8 @@ function _getLoadingMessage(path, method) {
   if (path.includes('/logs') && m === 'DELETE') return 'Cleaning up old logs...';
   if (path.includes('/logs')) return 'Loading audit logs...';
   if (path.includes('/health')) return 'Checking server...';
+  if (path.includes('/revisions/')) return 'Loading revision snapshot...';
+  if (path.includes('/revisions'))  return 'Loading revision history...';
   return 'Processing...';
 }
 
@@ -448,6 +450,27 @@ function _normalizeApiItem(apiItem) {
   return normalized;
 }
 
+/**
+ * GET /api/items/{item_code}/revisions
+ * List all archived revisions for an item code.
+ * @param {string} itemCode
+ */
+async function apiGetItemRevisions(itemCode) {
+  return _apiFetch(`/api/items/${encodeURIComponent(itemCode)}/revisions`);
+}
+
+/**
+ * GET /api/items/{item_code}/revisions/{revision}
+ * Retrieve the full snapshot of a specific archived revision.
+ * @param {string} itemCode
+ * @param {string|number} revision
+ */
+async function apiGetItemRevision(itemCode, revision) {
+  return _apiFetch(
+    `/api/items/${encodeURIComponent(itemCode)}/revisions/${encodeURIComponent(revision)}`
+  );
+}
+
 /* ============================================
    PRODUCTION LINES
    ============================================ */
@@ -707,6 +730,8 @@ window.apiDeleteItem           = apiDeleteItem;
 window.apiAddItemActivity      = apiAddItemActivity;
 window.apiUpdateItemActivity   = apiUpdateItemActivity;
 window.apiDeleteItemActivity   = apiDeleteItemActivity;
+window.apiGetItemRevisions     = apiGetItemRevisions;
+window.apiGetItemRevision      = apiGetItemRevision;
 window.apiGetProductionLines   = apiGetProductionLines;
 window.apiCreateProductionLine = apiCreateProductionLine;
 window.apiGetProductionLine    = apiGetProductionLine;

@@ -14,6 +14,13 @@
  * @param {number|string} time - Time in minutes
  */
 function addRow(activityName, pax, machine, time) {
+  // Guard against undefined values — <input type="number" value="undefined"> triggers
+  // a browser parse error ("The specified value 'undefined' cannot be parsed").
+  activityName = (activityName !== undefined && activityName !== null) ? activityName : '';
+  pax          = (pax          !== undefined && pax          !== null) ? pax          : '';
+  machine      = (machine      !== undefined && machine      !== null) ? machine      : '';
+  time         = (time         !== undefined && time         !== null) ? time         : '';
+
   var tbody = document.getElementById('tableBody');
   if (!tbody) return;
 
@@ -246,31 +253,123 @@ async function saveRoutingDocument() {
   const isUpdate = App.currentState === AppState.UPDATE;
 
   // --- Try API first ---
-  let apiOk = false;
   try {
-    const res = isUpdate
-      ? await apiUpdateItem(itemCode, record)
-      : await apiCreateItem(record);
+    if (!isUpdate) {
+      // ── CREATE: single call, activities included in body ──────────────────
+      const res = await apiCreateItem(record);
+      if (!res.ok) {
+        await showModal({
+          icon: 'danger', title: 'Save Failed',
+          message: getApiErrorMessage(res, 'create item', itemCode),
+          type: 'confirm', confirmLabel: 'OK',
+        });
+        return;
+      }
 
-    if (!res.ok) {
-      // Server returned a definitive error — show modal and abort.
-      // Do NOT fall through to local save; a 4xx means the data was rejected.
-      const errMsg = getApiErrorMessage(
-        res,
-        isUpdate ? 'update item' : 'create item',
-        itemCode
+    } else {
+      // ── UPDATE: patch metadata first, then diff + sync activities ─────────
+
+      // 1. Patch metadata (always — revision bump happens here)
+      const metaRes = await apiUpdateItem(itemCode, record);
+      if (!metaRes.ok) {
+        await showModal({
+          icon: 'danger', title: 'Update Failed',
+          message: getApiErrorMessage(metaRes, 'update item', itemCode),
+          type: 'confirm', confirmLabel: 'OK',
+        });
+        return;
+      }
+
+      // 2. Get the original activities that are currently saved on the server
+      //    App.currentRecord is set by the search/lookup flow when UPDATE mode loads
+      const originalActivities = (App.currentRecord && App.currentRecord.activities)
+        ? App.currentRecord.activities
+        : [];
+
+      const updatedActivities = record.activities || [];
+
+      // Activities with no id are NEW → POST
+      const toAdd = updatedActivities.filter(a => !a.id);
+
+      // Activities in original but missing from updated list → DELETE
+      const updatedIds = new Set(
+        updatedActivities.filter(a => a.id).map(a => String(a.id))
       );
-      await showModal({
-        icon:         'danger',
-        title:        'Save Failed',
-        message:      errMsg,
-        type:         'confirm',
-        confirmLabel: 'OK',
+      const toDelete = originalActivities.filter(a => !updatedIds.has(String(a.id)));
+
+      // Activities present in both but with changed fields → PATCH
+      const toUpdate = updatedActivities.filter(act => {
+        if (!act.id) return false;
+        const orig = originalActivities.find(a => String(a.id) === String(act.id));
+        if (!orig) return false;
+        return ['activity_name', 'activities', 'pax', 'machine', 'time_min'].some(f => {
+          // normalise activity_name vs activities field alias
+          const newVal  = f === 'activity_name' ? (act.activity_name  || act.activities)  : act[f];
+          const origVal = f === 'activity_name' ? (orig.activity_name || orig.activities) : orig[f];
+          return String(newVal ?? '') !== String(origVal ?? '');
+        });
       });
-      return; // Stop here — no success toast, no local save
+
+      // 3. Add new activities
+      for (const act of toAdd) {
+        const res = await apiAddItemActivity(itemCode, act);
+        if (!res.ok) {
+          await showModal({
+            icon: 'danger', title: 'Add Activity Failed',
+            message: getApiErrorMessage(res, 'add activity', itemCode),
+            type: 'confirm', confirmLabel: 'OK',
+          });
+          return;
+        }
+      }
+
+      // 4. Delete removed activities
+      for (const act of toDelete) {
+        const res = await apiDeleteItemActivity(itemCode, act.id);
+        if (!res.ok) {
+          await showModal({
+            icon: 'danger', title: 'Delete Activity Failed',
+            message: getApiErrorMessage(res, 'delete activity', itemCode),
+            type: 'confirm', confirmLabel: 'OK',
+          });
+          return;
+        }
+      }
+
+      // 5. Patch changed activities
+      for (const act of toUpdate) {
+        const res = await apiUpdateItemActivity(itemCode, act.id, {
+          activity_name: act.activity_name || act.activities || '',
+          pax:       act.pax,
+          machine:   act.machine,
+          time_min:  act.time_min,
+          type:      act.type      || 'Labor',
+          class:     act.class     || 'DL',
+          class_1:   act.class_1   || 'DL',
+          sort_order: act.sort_order,
+        });
+        if (!res.ok) {
+          await showModal({
+            icon: 'danger', title: 'Update Activity Failed',
+            message: getApiErrorMessage(res, 'update activity', itemCode),
+            type: 'confirm', confirmLabel: 'OK',
+          });
+          return;
+        }
+      }
+
+      // 6. Re-fetch the saved record from the server so local cache is accurate
+      //    (revision bumped, activity IDs assigned, etc.)
+      try {
+        const fresh = await apiGetItem(itemCode);
+        if (fresh.ok && fresh.data) {
+          const normalized = _normalizeApiItem(fresh.data);
+          App.currentRecord = normalized;
+          saveRoutingRecord(itemCode, normalized);
+        }
+      } catch (_) { /* non-fatal — local cache will be slightly stale */ }
     }
 
-    apiOk = true; // API confirmed the save
   } catch (_) {
     // Network error (server unreachable) — fall back to local-only save
     console.warn('[API] Unreachable — saving to local mock-db only.');
@@ -285,8 +384,8 @@ async function saveRoutingDocument() {
     return;
   }
 
-  // --- API success: keep local cache in sync ---
-  saveRoutingRecord(itemCode, record);
+  // --- API success: keep local cache in sync (CREATE path) ---
+  if (!isUpdate) saveRoutingRecord(itemCode, record);
   clearTabFormState(App.currentState);
 
   const actionLabel = isUpdate ? 'Updated' : 'Added';

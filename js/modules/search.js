@@ -45,6 +45,7 @@ async function performSearch() {
     statusLabel.textContent = `Record found for ${query}.`;
     statusLabel.className = 'search-status search-status--success';
 
+    App.currentRecord = data; // store for activity diffing on update
     loadDataIntoForm(data);
 
     // Refresh dropdowns AFTER loadDataIntoForm has set the production line value,
@@ -71,6 +72,7 @@ async function performSearch() {
       _setUpdateActionButtonsVisible(false);
     }
   } else {
+    App.currentRecord = null;
     statusLabel.textContent = `No record found for ${query}.`;
     statusLabel.className = 'search-status search-status--error';
     clearForm();

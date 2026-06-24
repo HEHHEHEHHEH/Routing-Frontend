@@ -73,7 +73,10 @@ const App = {
   isFormEditable: true,
 
   /** @type {boolean} Whether admin tabs have been initialized */
-  adminTabsInitialized: false
+  adminTabsInitialized: false,
+
+  // The full record last loaded into UPDATE mode (includes activity ids for diffing)
+  currentRecord: null
 };
 
 /**
