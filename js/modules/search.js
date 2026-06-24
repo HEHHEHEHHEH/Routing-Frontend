@@ -93,6 +93,8 @@ async function performSearch() {
 function _setUpdateActionButtonsVisible(visible) {
   const el = document.getElementById('update-action-buttons');
   if (el) el.style.display = visible ? 'flex' : 'none';
+  const archiveEl = document.getElementById('archive-button-container');
+  if (archiveEl) archiveEl.style.display = visible ? 'flex' : 'none';
 }
 
 /**

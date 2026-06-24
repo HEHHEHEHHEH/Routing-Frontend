@@ -208,9 +208,9 @@ function showRoutingView(viewRouting, viewManage, viewAllData, mode, previousSta
   if (mode === 'add') {
     searchSection.classList.add('hidden');
     saveBtn.classList.remove('hidden');
-    // Hide UPDATE-only action buttons when on other tabs
+    // Show action buttons in ADD mode (Archive, Refresh, Update)
     if (typeof _setUpdateActionButtonsVisible === 'function') {
-      _setUpdateActionButtonsVisible(false);
+      _setUpdateActionButtonsVisible(true);
     }
     // Show Clear button in ADD mode
     if (typeof _setClearBtnVisible === 'function') _setClearBtnVisible(true);
