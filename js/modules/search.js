@@ -60,10 +60,10 @@ if (typeof refreshAllActivityDropdowns === 'function') {
 refreshAllActivityDropdowns();
 }
 
-// Populate revision field (UPDATE tab shows it as a read-only input)
+// Populate revision field (UPDATE tab shows it as a read-only display)
 const revisionInputEl = document.getElementById('revisionInput');
 if (revisionInputEl) {
-revisionInputEl.value = data.revision ? 'Rev. ' + data.revision : '—';
+revisionInputEl.textContent = data.revision ? 'Rev. ' + data.revision : '—';
 }
 
 if (isUpdate) {

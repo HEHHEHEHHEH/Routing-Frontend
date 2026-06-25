@@ -622,6 +622,56 @@ async function apiDeleteLineActivity(lineCode, activityId) {
 }
 
 /* ============================================
+   EXPORT (SUPERUSER / ADMIN ONLY)
+   ============================================ */
+
+/**
+ * GET /api/export
+ * Download the full routing database as a server-generated .xlsx file.
+ * The server flattens all products + activities into one row per activity.
+ * Requires superuser or admin role.
+ *
+ * Returns { ok, status, data: Blob, filename } on success.
+ * Returns { ok: false, status, data: null }    on error.
+ */
+async function apiExportExcel() {
+  showLoading('Generating Excel export…');
+  const authHeaders = (typeof Auth !== 'undefined') ? Auth.authHeaders() : {};
+
+  try {
+    const response = await fetch(API_BASE_URL + '/api/export', {
+      method:  'GET',
+      headers: { ...authHeaders },
+    });
+
+    hideLoading();
+
+    if (!response.ok) {
+      // Try to read the JSON error body the server might send
+      let data = null;
+      try { data = await response.json(); } catch (_) {}
+      return { ok: false, status: response.status, data };
+    }
+
+    // Success — read as binary blob
+    const blob = await response.blob();
+
+    // Extract filename from Content-Disposition header when available
+    const disposition = response.headers.get('Content-Disposition') || '';
+    const match       = disposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+    const filename    = match
+      ? match[1].replace(/['"]/g, '').trim()
+      : 'Pioneer_Routing_Export.xlsx';
+
+    return { ok: true, status: response.status, data: blob, filename };
+  } catch (err) {
+    console.error('[API] Export network error:', err);
+    hideLoading();
+    return { ok: false, status: 0, data: null, filename: null };
+  }
+}
+
+/* ============================================
    LOGS (ADMIN ONLY)
    ============================================ */
 
@@ -758,6 +808,7 @@ window.apiUpdateLineActivity   = apiUpdateLineActivity;
 window.apiDeleteLineActivity   = apiDeleteLineActivity;
 window.apiGetLogs              = apiGetLogs;
 window.apiCleanupLogs          = apiCleanupLogs;
+window.apiExportExcel          = apiExportExcel;
 // Internal helpers exposed for use in other modules
 window._normalizeApiItem       = _normalizeApiItem;
 window._mapItemPayload         = _mapItemPayload;

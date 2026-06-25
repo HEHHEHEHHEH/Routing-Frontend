@@ -703,7 +703,7 @@
       body.dark-mode #revisionInput {
         background-color: #16272d !important;
         color: #ffffff !important;
-        -webkit-text-fill-color: #ffffff !important;
+        border-color: #2c4851 !important;
       }
       body.dark-mode #lookup-display,
       body.dark-mode #lookup-display strong,
@@ -760,6 +760,11 @@
       body.dark-mode .archive-modal__subtitle,
       body.dark-mode #archive-modal-body p,
       body.dark-mode #archive-modal-spinner span {
+        color: #f0f6f7 !important;
+      }
+      body.dark-mode .custom-modal__panel h4,
+      body.dark-mode .custom-modal__panel p,
+      body.dark-mode .custom-modal__panel label {
         color: #f0f6f7 !important;
       }
 
@@ -981,8 +986,8 @@
                    value="1"
                    oninput="calculateAll()">
           </div>
-          <!-- Notes: shown in UPDATE, hidden in ADD -->
-          <div class="form-group hide-in-add" id="notesGroup">
+          <!-- Notes: shown in all routing modes (ADD, UPDATE, LOOKUP) -->
+          <div class="form-group" id="notesGroup">
             <label for="notesInput">Notes</label>
             <input type="text"
                    id="notesInput"
@@ -1008,14 +1013,16 @@
                    readonly
                    class="bg-gray-50 text-gray-600">
           </div>
-          <!-- Revision: shown in UPDATE mode only -->
+          <!-- Revision: shown in UPDATE mode only — read-only display, not an input -->
           <div class="form-group hide-in-add" id="revisionGroup">
-            <label for="revisionInput" class="text-gray-500">Revision</label>
-            <input type="text"
-                   id="revisionInput"
-                   readonly
-                   style="background-color:#EBFFD8;color:#1e293b;"
-                   placeholder="—">
+            <label class="text-gray-500">Revision</label>
+            <p id="revisionInput"
+               class="bg-gray-50 text-gray-600"
+               style="margin:0; padding:0.45rem 0.65rem; border:1px solid #e2e8f0;
+                      border-radius:6px; font-size:0.875rem; font-weight:500;
+                      min-height:2.25rem; display:flex; align-items:center;">
+              —
+            </p>
           </div>
         </div>
         </div><!-- end form-grid -->
@@ -1227,9 +1234,19 @@
          Paginated table of all routing records
          ============================================ -->
     <div id="view-alldata" class="hidden view-card">
-      <h3 style="font-size:1.25rem;font-weight:700;color:var(--gray-800);margin-bottom:1.5rem;">
-        All Routing Records Database
-      </h3>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
+        <h3 style="font-size:1.25rem;font-weight:700;color:var(--gray-800);margin:0;">
+          All Routing Records Database
+        </h3>
+        <button onclick="showExportModal()" class="btn btn--success" style="display:inline-flex; align-items:center; gap:0.5rem; padding:0.5rem 1rem;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          Export to Excel
+        </button>
+      </div>
 
       <div class="data-table-wrapper">
         <table class="data-table">
@@ -1632,6 +1649,46 @@
       <div style="display:flex;gap:0.75rem;justify-content:flex-end;">
         <button id="timeFormulaCancelBtn" class="formula-modal__btn-cancel" type="button">Cancel</button>
         <button id="timeFormulaApplyBtn" class="formula-modal__btn-apply" type="button">Apply to Cell</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================
+       EXPORT CONFIRMATION MODAL
+       ============================================ -->
+  <div id="exportModal" class="custom-modal modal-backdrop">
+    <div class="custom-modal__panel">
+      <div id="exportModalIconWrap" style="margin-bottom:1rem; display:flex; justify-content:center;">
+        <div style="background:#f0fdf4; color:#16a34a; width:3rem; height:3rem; border-radius:50%; display:flex; align-items:center; justify-content:center;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+        </div>
+      </div>
+      <h4 style="font-size:1rem; font-weight:700; color:#0f172a; margin:0 0 0.4rem; text-align:center;">Export Database</h4>
+      <p style="font-size:0.875rem; color:#475569; margin:0 0 1.25rem; line-height:1.55; text-align:center;">
+        Are you sure you want to export the entire routing database to Excel? This file will contain all products and line activities.
+      </p>
+      <div class="modal-actions">
+        <button id="btn-export-cancel" onclick="hideExportModal()"
+                style="padding:0.5rem 1.2rem; border-radius:8px; font-size:0.875rem; font-weight:600; background:#f1f5f9; color:#374151; border:1px solid #e2e8f0; cursor:pointer;"
+                onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
+          Cancel
+        </button>
+        <button id="btn-export-confirm" onclick="handleExportConfirm()"
+                style="padding:0.5rem 1.2rem; border-radius:8px; font-size:0.875rem; font-weight:600; background:#16a34a; color:#fff; border:none; cursor:pointer; display:inline-flex; align-items:center; gap:0.5rem;"
+                onmouseover="this.style.background='#15803d'" onmouseout="this.style.background='#16a34a'">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          Download Excel
+        </button>
       </div>
     </div>
   </div>
