@@ -899,9 +899,9 @@ body.dark-mode .data-table-wrapper {
 
 /* "ROUTING HEADQUARTERS" — sits directly under the logo */
 .login-screen__headline {
-  color: rgba(255, 255, 255, 0.75);
-  font-size: 0.625rem;
-  font-weight: 900;
+  color: rgba(0, 0, 0, 0.75);
+  font-size: 0.900rem;
+  font-weight: 1000;
   letter-spacing: 0.25em;
   text-transform: uppercase;
   padding-left: 0.1rem;
