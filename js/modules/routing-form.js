@@ -182,15 +182,33 @@ function updateDelColumnVisibility() {
 }
 
 /**
- * Remove a row from the routing table
+ * Remove a row from the routing table.
+ * Shows a confirmation modal before deleting so the user can cancel.
+ * Works in both ADD and UPDATE modes.
  * @param {HTMLButtonElement} btn - The remove button clicked
  */
-function removeRow(btn) {
+async function removeRow(btn) {
   var row = btn.closest('tr');
-  if (row) {
-    row.remove();
-    calculateAll();
-  }
+  if (!row) return;
+
+  // Read the activity name from the select to make the message specific
+  var activitySelect = row.querySelector('.activity-select');
+  var activityName   = activitySelect ? activitySelect.value.trim() : '';
+  var label          = activityName ? `"${activityName}"` : 'this activity row';
+
+  var result = await showModal({
+    icon:         'danger',
+    title:        'Remove Activity Row',
+    message:      `Are you sure you want to remove ${label}? This cannot be undone.`,
+    type:         'confirm',
+    confirmStyle: 'danger',
+    confirmLabel: 'Yes, Remove',
+  });
+
+  if (!result.confirmed) return;
+
+  row.remove();
+  calculateAll();
 }
 
 /**

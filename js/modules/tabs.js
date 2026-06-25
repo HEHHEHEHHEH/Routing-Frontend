@@ -79,7 +79,7 @@ return;
 // --- Guard: routing/data tabs are not available to admin ---
 const routingStates = [
 AppState.ADD, AppState.LOOKUP, AppState.UPDATE,
-AppState.MANAGE, AppState.ALLDATA
+AppState.ALLDATA
 ];
 if (role === 'admin' && routingStates.includes(tabId)) {
 tabId = AppState.ADMIN;

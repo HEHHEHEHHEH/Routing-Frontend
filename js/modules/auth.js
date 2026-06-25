@@ -520,7 +520,7 @@ function _refreshAdminTabs() {
     'tab-add':     ['superuser'],
     'tab-lookup':  ['superuser', 'user'],
     'tab-update':  ['superuser'],
-    'tab-manage':  ['superuser'],
+    'tab-manage':  ['admin'],
     'tab-alldata': ['superuser', 'user'],
     'tab-admin':   ['admin'],
     'tab-logs':    ['admin'],
@@ -533,8 +533,8 @@ function _refreshAdminTabs() {
 
   // Redirect if the user is on a tab their role doesn't allow
   const allowedStates = {
-    admin:     [AppState.ADMIN, AppState.LOGS],
-    superuser: [AppState.ADD, AppState.LOOKUP, AppState.UPDATE, AppState.MANAGE, AppState.ALLDATA],
+    admin:     [AppState.ADMIN, AppState.MANAGE, AppState.LOGS],
+    superuser: [AppState.ADD, AppState.LOOKUP, AppState.UPDATE, AppState.ALLDATA],
     user:      [AppState.LOOKUP, AppState.ALLDATA],
   };
 
