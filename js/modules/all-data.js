@@ -102,11 +102,26 @@ function renderAllData() {
         <td>${sanitizeInput(lineCode)}</td>
         <td><span class="badge ${badgeClass}">${typeCode}</span></td>
         <td class="text-center">
-          <button onclick="viewFromAllData('${sanitizeInput(itemCode)}')" class="link-action">
+          <button class="link-action btn-view-detail"
+                  data-item-code="${sanitizeInput(itemCode)}"
+                  type="button">
             View Details
           </button>
         </td>`;
       tbody.appendChild(tr);
+    });
+  }
+
+  // FIX (MEDIUM-002): Attach a single delegated listener to the tbody instead of
+  // embedding item codes in inline onclick handlers.  The listener reads the item
+  // code from a data-attribute, which is never executed as JavaScript.
+  if (tbody && !tbody.dataset.listenerBound) {
+    tbody.dataset.listenerBound = 'true';
+    tbody.addEventListener('click', function(e) {
+      const btn = e.target.closest('.btn-view-detail');
+      if (!btn) return;
+      const code = btn.getAttribute('data-item-code');
+      if (code) viewFromAllData(code);
     });
   }
 

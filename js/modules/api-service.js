@@ -41,22 +41,57 @@
    DELETE /api/logs/cleanup                                 Purge old log entries
    ============================================ */
 
-const API_BASE_URL = 'http://192.168.50.126:8080'; // Change to your server URL
+/**
+ * API Base URL — loaded from config.js (window.APP_CONFIG) at runtime.
+ *
+ * PRODUCTION REQUIREMENT: The server MUST be served over HTTPS so that
+ * JWT tokens and all routing data are transmitted encrypted.
+ * Plain HTTP exposes Bearer tokens to anyone on the same network.
+ *
+ * Configure in js/config.js:
+ *   window.APP_CONFIG = { API_BASE_URL: 'https://your-server.local' };
+ *
+ * Falls back to the value below ONLY for local development.
+ * Never commit a production IP/hostname here.
+ */
+const API_BASE_URL = (
+  (typeof window !== 'undefined' && window.APP_CONFIG && window.APP_CONFIG.API_BASE_URL)
+    ? window.APP_CONFIG.API_BASE_URL
+    : 'http://localhost:8080'   // ← local dev fallback only; use HTTPS in production
+).replace(/\/$/, ''); // strip trailing slash
 
 /* ============================================
    LOADING ANIMATION SYSTEM
    ============================================ */
 
 /**
+ * Reference counter for nested / concurrent API calls.
+ * The overlay stays visible as long as any call is still in flight.
+ * Only when the counter drops back to 0 is the overlay hidden.
+ *
+ * FIX (HIGH-001): Previously showLoading/hideLoading had no counter,
+ * so the overlay flickered in/out for every individual call during a
+ * multi-step UPDATE save. The counter keeps it solid throughout.
+ */
+let _loadingRefCount = 0;
+
+/**
  * Show the loading overlay spinner.
- * Call this before every API request.
+ * Increments the internal reference counter — safe to call from nested
+ * or parallel async functions.  The overlay only appears on the first call
+ * (counter 0→1) and the message is updated on every call.
  */
 function showLoading(message) {
+  _loadingRefCount++;
+
   let overlay = document.getElementById('api-loading-overlay');
   if (!overlay) {
     // Create the overlay if it doesn't exist
     overlay = document.createElement('div');
     overlay.id = 'api-loading-overlay';
+    overlay.setAttribute('role', 'status');          // FIX (MEDIUM-003): screen-reader hint
+    overlay.setAttribute('aria-live', 'polite');     // FIX (MEDIUM-003): announced on change
+    overlay.setAttribute('aria-label', 'Loading');
     overlay.style.cssText = [
       'position:fixed', 'inset:0', 'z-index:99999',
       'display:flex', 'align-items:center', 'justify-content:center',
@@ -86,10 +121,14 @@ function showLoading(message) {
 }
 
 /**
- * Hide the loading overlay spinner.
- * Call this after every API request completes (success or error).
+ * Decrement the loading reference counter.
+ * The overlay is only hidden when ALL in-flight calls have finished
+ * (counter reaches 0), preventing the flicker seen during multi-step saves.
  */
 function hideLoading() {
+  _loadingRefCount = Math.max(0, _loadingRefCount - 1);
+  if (_loadingRefCount > 0) return; // other calls still in flight — keep overlay visible
+
   const overlay = document.getElementById('api-loading-overlay');
   if (overlay) {
     overlay.style.opacity = '0';
@@ -98,8 +137,33 @@ function hideLoading() {
 }
 
 /**
+ * Force-hide the loading overlay regardless of the reference counter.
+ * Use ONLY in error-recovery paths where a hung request must be cleared.
+ * @private
+ */
+function _forceHideLoading() {
+  _loadingRefCount = 0;
+  const overlay = document.getElementById('api-loading-overlay');
+  if (overlay) {
+    overlay.style.opacity = '0';
+    setTimeout(() => { overlay.style.display = 'none'; }, 200);
+  }
+}
+
+/**
+ * Request timeout in milliseconds.
+ * If the server does not respond within this window the request is
+ * aborted and the user sees a "Request timed out" error.
+ * FIX (HIGH-002): Previously fetch() had no timeout, so a hung server
+ * left the loading overlay on screen forever with no way to recover.
+ */
+const API_REQUEST_TIMEOUT_MS = 30000; // 30 seconds
+
+/**
  * Internal helper — perform a fetch request and return parsed JSON.
  * Automatically shows/hides the loading animation.
+ * Aborts and surfaces a friendly error if the server doesn't respond
+ * within API_REQUEST_TIMEOUT_MS.
  * @param {string} path - API path (e.g. '/api/items')
  * @param {string} method - HTTP method
  * @param {Object|null} body - Request body (will be JSON-serialized)
@@ -121,13 +185,17 @@ async function _apiFetch(path, method, body) {
     options.body = JSON.stringify(body);
   }
 
+  // FIX (HIGH-002): AbortController timeout — prevents the loading overlay
+  // from hanging forever when the server is slow or unresponsive.
+  const controller = new AbortController();
+  const timeoutId  = setTimeout(() => controller.abort(), API_REQUEST_TIMEOUT_MS);
+  options.signal   = controller.signal;
+
   try {
     const response = await fetch(API_BASE_URL + path, options);
+    clearTimeout(timeoutId);
 
     // If the server returns 401 (token expired / invalid), force logout.
-    // Auth.logout() now does a full page reload, so the login screen will
-    // reappear with a fresh _loginSuccessCallback — re-login works correctly
-    // for all roles after this.
     if (response.status === 401 && typeof Auth !== 'undefined') {
       console.warn('[API] 401 Unauthorized — logging out.');
       hideLoading();
@@ -139,9 +207,28 @@ async function _apiFetch(path, method, body) {
     try { data = await response.json(); } catch (_) {}
     hideLoading();
     return { ok: response.ok, status: response.status, data };
+
   } catch (err) {
-    console.error('[API] Network error:', err);
+    clearTimeout(timeoutId);
     hideLoading();
+
+    // Distinguish timeout (AbortError) from other network errors
+    if (err && err.name === 'AbortError') {
+      console.error('[API] Request timed out:', path);
+      // Show a user-visible timeout modal if the modal system is available
+      if (typeof showModal === 'function') {
+        showModal({
+          icon:         'danger',
+          title:        'Request Timed Out',
+          message:      'The server did not respond in time. Please check your connection and try again.',
+          type:         'confirm',
+          confirmLabel: 'OK',
+        });
+      }
+      return { ok: false, status: 0, data: { error: 'Request timed out.' } };
+    }
+
+    console.error('[API] Network error:', err);
     return { ok: false, status: 0, data: null };
   }
 }
@@ -638,32 +725,34 @@ async function apiExportExcel() {
   showLoading('Generating Excel export…');
   const authHeaders = (typeof Auth !== 'undefined') ? Auth.authHeaders() : {};
 
+  // FIX (HIGH-002): timeout on the export request too
+  const controller = new AbortController();
+  const timeoutId  = setTimeout(() => controller.abort(), API_REQUEST_TIMEOUT_MS);
+
   try {
     const response = await fetch(API_BASE_URL + '/api/export', {
       method:  'GET',
       headers: { ...authHeaders },
+      signal:  controller.signal,
     });
+    clearTimeout(timeoutId);
 
     hideLoading();
 
     if (response.status === 401 && typeof Auth !== 'undefined') {
       console.warn('[API] 401 Unauthorized — logging out.');
-      hideLoading();
       Auth.logout();
       return { ok: false, status: 401, data: null };
     }
 
     if (!response.ok) {
-      // Try to read the JSON error body the server might send
       let data = null;
       try { data = await response.json(); } catch (_) {}
       return { ok: false, status: response.status, data };
     }
 
-    // Success — read as binary blob
     const blob = await response.blob();
 
-    // Extract filename from Content-Disposition header when available
     const disposition = response.headers.get('Content-Disposition') || '';
     const match       = disposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
     const filename    = match
@@ -672,8 +761,22 @@ async function apiExportExcel() {
 
     return { ok: true, status: response.status, data: blob, filename };
   } catch (err) {
-    console.error('[API] Export network error:', err);
+    clearTimeout(timeoutId);
     hideLoading();
+
+    if (err && err.name === 'AbortError') {
+      console.error('[API] Export request timed out.');
+      if (typeof showModal === 'function') {
+        showModal({
+          icon: 'danger', title: 'Export Timed Out',
+          message: 'The export did not complete in time. Please try again.',
+          type: 'confirm', confirmLabel: 'OK',
+        });
+      }
+      return { ok: false, status: 0, data: null };
+    }
+
+    console.error('[API] Export network error:', err);
     return { ok: false, status: 0, data: null, filename: null };
   }
 }
@@ -790,6 +893,7 @@ function getApiErrorMessage(res, operation, identifier) {
    ============================================ */
 window.showLoading             = showLoading;
 window.hideLoading             = hideLoading;
+window._forceHideLoading       = _forceHideLoading;
 window.apiLogin                = apiLogin;
 window.apiGetMe                = apiGetMe;
 window.apiRegister             = apiRegister;

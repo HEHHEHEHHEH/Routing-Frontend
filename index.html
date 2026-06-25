@@ -1918,7 +1918,13 @@
   <!-- ============================================
        CUSTOM MODAL DIALOG
        ============================================ -->
-  <div id="customModal" class="custom-modal modal-backdrop">
+  <!-- FIX (MEDIUM-003): role="dialog" + aria-modal tell screen readers this is a
+       modal dialog. aria-labelledby/describedby link the announced title and body. -->
+  <div id="customModal" class="custom-modal modal-backdrop"
+       role="dialog"
+       aria-modal="true"
+       aria-labelledby="modalTitle"
+       aria-describedby="modalMessage">
     <div class="custom-modal__panel">
       <div id="modalIconWrap" class="modal-icon-wrap"></div>
       <h4 id="modalTitle" class="modal-title"></h4>
@@ -1939,39 +1945,47 @@
 
   <!-- ============================================
        JAVASCRIPT - Modular Architecture
+       FIX (LOW-001): All scripts now use `defer` so the browser can
+       download them in parallel while parsing HTML, then execute them
+       in order after the DOM is ready — no render-blocking, no race.
        ============================================ -->
-  <script src="js/modules/auth.js"></script>
+
+  <!-- Layer 0a: Config — must load before api-service reads API_BASE_URL -->
+  <!-- Create js/config.js to set window.APP_CONFIG = { API_BASE_URL: 'https://...' } -->
+  <!-- <script src="js/config.js" defer></script> -->
+
+  <script src="js/modules/auth.js" defer></script>
 
   <!-- Layer 0b: API Service -->
-  <script src="js/modules/api-service.js"></script>
+  <script src="js/modules/api-service.js" defer></script>
 
   <!-- Layer 1: State & Data -->
-  <script src="js/modules/state.js"></script>
-  <script src="js/modules/mock-db.js"></script>
+  <script src="js/modules/state.js" defer></script>
+  <script src="js/modules/mock-db.js" defer></script>
 
   <!-- Layer 2: Utilities -->
-  <script src="js/modules/utils.js"></script>
+  <script src="js/modules/utils.js" defer></script>
 
   <!-- Layer 3: Core Logic -->
-  <script src="js/modules/calculations.js"></script>
-  <script src="js/modules/view-controller.js"></script>
+  <script src="js/modules/calculations.js" defer></script>
+  <script src="js/modules/view-controller.js" defer></script>
 
   <!-- Layer 4: Feature Modules -->
-  <script src="js/modules/routing-form.js"></script>
-  <script src="js/modules/search.js"></script>
-  <script src="js/modules/manage-activities.js"></script>
-  <script src="js/modules/all-data.js"></script>
+  <script src="js/modules/routing-form.js" defer></script>
+  <script src="js/modules/search.js" defer></script>
+  <script src="js/modules/manage-activities.js" defer></script>
+  <script src="js/modules/all-data.js" defer></script>
 
   <!-- Layer 5: Admin Modules (admin only, but scripts load for all) -->
-  <script src="js/modules/admin-panel.js"></script>
-  <script src="js/modules/logs.js"></script>
+  <script src="js/modules/admin-panel.js" defer></script>
+  <script src="js/modules/logs.js" defer></script>
 
   <!-- Archive viewer (UPDATE tab only, read-only revision history) -->
-  <script src="js/modules/archive.js"></script>
+  <script src="js/modules/archive.js" defer></script>
 
   <!-- Layer 6: Router & Entry Point -->
-  <script src="js/modules/tabs.js"></script>
-  <script src="js/main.js"></script>
+  <script src="js/modules/tabs.js" defer></script>
+  <script src="js/main.js" defer></script>
 
   <!-- 
     JS Module Hierarchy:

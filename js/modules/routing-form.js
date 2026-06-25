@@ -339,6 +339,8 @@ async function saveRoutingDocument() {
             message: getApiErrorMessage(res, 'add activity', itemCode),
             type: 'confirm', confirmLabel: 'OK',
           });
+          // FIX (MEDIUM-001): reload server state so form reflects what actually saved
+          await _recoverAfterPartialSave(itemCode, 'add');
           return;
         }
       }
@@ -353,6 +355,8 @@ async function saveRoutingDocument() {
             message: getApiErrorMessage(res, 'delete activity', itemCode),
             type: 'confirm', confirmLabel: 'OK',
           });
+          // FIX (MEDIUM-001): reload server state
+          await _recoverAfterPartialSave(itemCode, 'delete');
           return;
         }
       }
@@ -376,6 +380,8 @@ async function saveRoutingDocument() {
             message: getApiErrorMessage(res, 'update activity', itemCode),
             type: 'confirm', confirmLabel: 'OK',
           });
+          // FIX (MEDIUM-001): reload server state
+          await _recoverAfterPartialSave(itemCode, 'update');
           return;
         }
       }
@@ -694,6 +700,46 @@ function _sanitizeHtml(str) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+}
+
+/**
+ * FIX (MEDIUM-001): Partial-save recovery helper.
+ *
+ * Called whenever an activity add/delete/patch fails mid-batch during an UPDATE
+ * save.  At that point the server record may be in a partially-synced state
+ * (metadata bumped, some activities changed, others not).
+ *
+ * This function:
+ *  1. Re-fetches the current server state for the item.
+ *  2. Syncs the local cache and form with whatever the server has.
+ *  3. Shows a warning toast so the user knows to review and re-save.
+ *
+ * @param {string} itemCode
+ * @param {string} failedOp - 'add' | 'delete' | 'update' — used in the toast message
+ */
+async function _recoverAfterPartialSave(itemCode, failedOp) {
+  try {
+    const fresh = await apiGetItem(itemCode);
+    if (fresh.ok && fresh.data) {
+      const normalized = _normalizeApiItem(fresh.data);
+      App.currentRecord = normalized;
+      saveRoutingRecord(itemCode, normalized);
+      // Reload the form with whatever the server actually has
+      loadDataIntoForm(normalized);
+      if (typeof refreshAllActivityDropdowns === 'function') {
+        refreshAllActivityDropdowns();
+      }
+    }
+  } catch (_) {
+    // Non-fatal — best-effort recovery
+  }
+
+  showToast({
+    type: 'warn',
+    title: 'Partial Save — Review Required',
+    message: `The ${failedOp} operation failed mid-save. The form has been reloaded with the current server state. Please review the activities and re-save.`,
+    duration: 7000,
+  });
 }
 
 // Expose globally
