@@ -41,7 +41,7 @@
    DELETE /api/logs/cleanup                                 Purge old log entries
    ============================================ */
 
-const API_BASE_URL = 'http://192.168.50.82:8080'; // Change to your server URL
+const API_BASE_URL = 'http://192.168.50.126:8080'; // Change to your server URL
 
 /* ============================================
    LOADING ANIMATION SYSTEM
