@@ -646,6 +646,13 @@ async function apiExportExcel() {
 
     hideLoading();
 
+    if (response.status === 401 && typeof Auth !== 'undefined') {
+      console.warn('[API] 401 Unauthorized — logging out.');
+      hideLoading();
+      Auth.logout();
+      return { ok: false, status: 401, data: null };
+    }
+
     if (!response.ok) {
       // Try to read the JSON error body the server might send
       let data = null;

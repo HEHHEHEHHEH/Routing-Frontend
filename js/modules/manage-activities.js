@@ -170,7 +170,7 @@ function showModal(opts) {
     } else if (opts.icon === 'warn') {
       iconWrap.innerHTML = '<div style="display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;background:#fffbeb;border:1px solid #fde68a;"><span style="font-size:1.1rem;color:#d97706;">&#9888;</span></div>';
     } else if (opts.icon === 'info') {
-      iconWrap.innerHTML = '<div style="display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;background:#eff6ff;border:1px solid #bfdbfe;"><span style="font-size:1.1rem;color:#2563eb;">&#8505;</span></div>';
+      iconWrap.innerHTML = '<div style="display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;background:#e6f7f7;border:1px solid #A4CCD9;"><span style="font-size:1.1rem;color:#005c66;">&#8505;</span></div>';
     }
 
     // Input field
@@ -186,9 +186,10 @@ function showModal(opts) {
     // Confirm button style
     const isDanger = opts.confirmStyle === 'danger';
     confirmBtn.textContent = opts.confirmLabel || 'Confirm';
-    confirmBtn.style.background = isDanger ? '#dc2626' : '#2563eb';
-    confirmBtn.onmouseover = () => { confirmBtn.style.background = isDanger ? '#b91c1c' : '#1d4ed8'; };
-    confirmBtn.onmouseout  = () => { confirmBtn.style.background = isDanger ? '#dc2626' : '#2563eb'; };
+    confirmBtn.style.background = isDanger ? '#dc2626' : '#005c66';
+    confirmBtn.style.color = '#ffffff';
+    confirmBtn.onmouseover = () => { confirmBtn.style.background = isDanger ? '#b91c1c' : '#0b5360'; };
+    confirmBtn.onmouseout  = () => { confirmBtn.style.background = isDanger ? '#dc2626' : '#005c66'; };
 
     modal.style.display = 'flex';
 
@@ -278,7 +279,7 @@ function showDualInputModal(opts) {
                  value="${opts.default2 || ''}"
                  placeholder="${opts.placeholder2 || ''}"
                  style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:0.55rem 0.8rem;font-size:0.875rem;color:#0f172a;box-sizing:border-box;outline:none;"
-                 onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#cbd5e1'">
+                 onfocus="this.style.borderColor='#005c66'" onblur="this.style.borderColor='#cbd5e1'">
         </div>
       </div>
     `;
@@ -289,9 +290,9 @@ function showDualInputModal(opts) {
 
     // Confirm button
     confirmBtn.textContent = opts.confirmLabel || 'Done';
-    confirmBtn.style.background = '#2563eb';
-    confirmBtn.onmouseover = () => { confirmBtn.style.background = '#1d4ed8'; };
-    confirmBtn.onmouseout  = () => { confirmBtn.style.background = '#2563eb'; };
+    confirmBtn.style.background = '#005c66';
+    confirmBtn.onmouseover = () => { confirmBtn.style.background = '#0b5360'; };
+    confirmBtn.onmouseout  = () => { confirmBtn.style.background = '#005c66'; };
 
     modal.style.display = 'flex';
 
@@ -303,7 +304,7 @@ function showDualInputModal(opts) {
     function cleanup() {
       modal.style.display = 'none';
       // Restore inputWrap to its original single-input state for showModal reuse
-      inputWrap.innerHTML = '<input id="modalInput" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:0.55rem 0.8rem;font-size:0.875rem;color:#0f172a;box-sizing:border-box;outline:none;" onfocus="this.style.borderColor=\'#3b82f6\'" onblur="this.style.borderColor=\'#cbd5e1\'">';
+      inputWrap.innerHTML = '<input id="modalInput" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:0.55rem 0.8rem;font-size:0.875rem;color:#0f172a;box-sizing:border-box;outline:none;" onfocus="this.style.borderColor=\'#005c66\'" onblur="this.style.borderColor=\'#cbd5e1\'">';
       document.removeEventListener('keydown', onKey);
       confirmBtn.onclick = null;
       cancelBtn.onclick  = null;

@@ -208,75 +208,72 @@ function _renderLoginScreen() {
   screen.className = 'login-screen';
 
   screen.innerHTML = `
+    <!-- Left: Hero/Photo -->
     <div class="login-screen__hero">
       <div class="login-screen__hero-overlay"></div>
-      <div class="login-screen__hero-content">
-        <h2 class="login-screen__headline">Routing Headquarters</h2>
-        <div class="login-screen__logo-wrap">
-          <svg viewBox="0 0 1150 120" xmlns="http://www.w3.org/2000/svg" class="login-screen__logo" aria-hidden="true">
-            <path d="M 0 5 L 360 5 C 450 5 450 105 360 105 L 0 105 Z" fill="#da291c" />
-            <g transform="skewX(-16)">
-              <text x="80" y="86" fill="#ffffff" style="font-family:'Arial Black',Impact,system-ui,sans-serif;font-weight:900;font-size:96px;letter-spacing:-2px">
-                <tspan style="font-size:96px">P</tspan><tspan style="font-size:74px;letter-spacing:-1px" dy="-4">ioneer</tspan>
-              </text>
-            </g>
-            <g transform="translate(480, 0)">
-              <text x="0" y="86" fill="#ffffff" style="font-family:'Arial Black',Impact,system-ui,sans-serif;font-weight:900;font-size:76px;letter-spacing:-2.5px;font-style:italic">Adhesives, Inc.</text>
-              <path d="M -10 100 L 590 100 Q 620 100 640 80 Q 620 112 590 112 L -10 112 Z" fill="#94a3b8" />
-            </g>
-          </svg>
-        </div>
+      <div class="login-screen__hero-bottom">
+        <h2 class="login-screen__tagline">Do it right.</h2>
+        <p class="login-screen__tagline-sub">Manage routing templates, BOM costing, and activity data — all in one place.</p>
       </div>
     </div>
 
+    <!-- Right: Form -->
     <div class="login-screen__form-area">
-      <div class="login-screen__form-wrap">
-        <div class="login-form">
-          <div class="login-form__row">
-            <label class="login-form__label" for="login-username">Username</label>
-            <input id="login-username" type="text" autocomplete="username"
-                   class="login-form__input"
-                   placeholder="Enter username">
-          </div>
+      <div class="login-card">
+        <div class="login-card__top-bar"></div>
+        <div class="login-card__body">
+          <p class="login-card__system-label">Routing Template System</p>
+          <h1 class="login-card__title">Welcome back</h1>
+          <p class="login-card__subtitle">Sign in to your account to continue.</p>
 
-          <div class="login-form__row">
-            <label class="login-form__label" for="login-password">Password</label>
-            <div style="position:relative;">
-              <input id="login-password" type="password" autocomplete="current-password"
+          <div class="login-form">
+            <div class="login-form__field">
+              <label class="login-form__label" for="login-username">Username</label>
+              <input id="login-username" type="text" autocomplete="username"
                      class="login-form__input"
-                     placeholder="Enter password"
-                     style="padding-right:2.5rem;">
-              <button
-                type="button"
-                id="login-pw-toggle"
-                onclick="_toggleLoginPassword()"
-                tabindex="-1"
-                aria-label="Show password"
-                style="position:absolute;right:0.65rem;top:50%;transform:translateY(-50%);background:none;border:none;padding:0;cursor:pointer;color:#94a3b8;display:flex;align-items:center;justify-content:center;width:1.5rem;height:1.5rem;outline:none;">
-                <svg id="login-pw-icon-show" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                  <circle cx="12" cy="12" r="3"/>
-                </svg>
-                <svg id="login-pw-icon-hide" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
-                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
-                  <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
-                  <line x1="1" y1="1" x2="23" y2="23"/>
-                </svg>
+                     placeholder="">
+            </div>
+
+            <div class="login-form__field">
+              <label class="login-form__label" for="login-password">Password</label>
+              <div style="position:relative;">
+                <input id="login-password" type="password" autocomplete="current-password"
+                       class="login-form__input"
+                       placeholder=""
+                       style="padding-right:2.5rem;">
+                <button
+                  type="button"
+                  id="login-pw-toggle"
+                  onclick="_toggleLoginPassword()"
+                  tabindex="-1"
+                  aria-label="Show password"
+                  style="position:absolute;right:0.65rem;top:50%;transform:translateY(-50%);background:none;border:none;padding:0;cursor:pointer;color:#94a3b8;display:flex;align-items:center;justify-content:center;width:1.5rem;height:1.5rem;outline:none;">
+                  <svg id="login-pw-icon-show" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                  <svg id="login-pw-icon-hide" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                    <line x1="1" y1="1" x2="23" y2="23"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div id="login-error" class="login-form__error hidden"></div>
+
+            <div class="login-form__submit-wrap">
+              <button id="login-btn" type="button" onclick="_handleLoginSubmit()" class="login-form__submit">
+                Login
               </button>
             </div>
+
+            <p class="login-form__footer">
+              Access is restricted to authorised personnel only.<br>
+              Contact your administrator if you need access.
+            </p>
           </div>
-
-          <div id="login-error" class="login-form__error hidden"></div>
-
-          <div class="login-form__submit-wrap">
-            <button id="login-btn" type="button" onclick="_handleLoginSubmit()" class="login-form__submit">
-              Login
-            </button>
-          </div>
-
-          <p class="login-form__footer">
-            Contact your administrator if you need access.
-          </p>
         </div>
       </div>
     </div>
@@ -290,6 +287,7 @@ function _renderLoginScreen() {
 
   setTimeout(() => document.getElementById('login-username')?.focus(), 100);
 }
+
 
 function _showLoginScreen() {
   const screen = document.getElementById('login-screen');

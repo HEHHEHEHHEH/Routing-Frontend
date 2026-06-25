@@ -762,10 +762,234 @@
       body.dark-mode #archive-modal-spinner span {
         color: #f0f6f7 !important;
       }
-      body.dark-mode .custom-modal__panel h4,
-      body.dark-mode .custom-modal__panel p,
-      body.dark-mode .custom-modal__panel label {
-        color: #f0f6f7 !important;
+      /* ── Premium Modal Styling System ── */
+      .modal-backdrop {
+        backdrop-filter: blur(6px) !important;
+        background: rgba(15, 23, 42, 0.45) !important;
+        transition: all 0.25s ease;
+      }
+      body.dark-mode .modal-backdrop {
+        background: rgba(4, 16, 20, 0.65) !important;
+      }
+      
+      .modal-icon-wrap {
+        margin-bottom: 1.25rem;
+      }
+      .modal-icon-circle-success {
+        background: #f0fdf4;
+        color: #16a34a;
+        width: 3.25rem;
+        height: 3.25rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 12px rgba(22, 163, 74, 0.15);
+      }
+      body.dark-mode .modal-icon-circle-success {
+        background: rgba(22, 163, 74, 0.15);
+        color: #4ade80;
+        box-shadow: 0 4px 12px rgba(22, 163, 74, 0.05);
+      }
+
+      .modal-title {
+        font-size: 1.125rem;
+        font-weight: 700;
+        color: var(--gray-800);
+        margin: 0 0 0.5rem;
+        letter-spacing: -0.01em;
+      }
+      body.dark-mode .modal-title {
+        color: #ffffff !important;
+      }
+
+      .modal-message {
+        font-size: 0.875rem;
+        color: var(--gray-600);
+        margin: 0 0 1.5rem;
+        line-height: 1.6;
+      }
+      body.dark-mode .modal-message {
+        color: #b4c5ca !important;
+      }
+
+      .modal-input {
+        width: 100%;
+        border: 1.5px solid var(--pal-teal-mid);
+        border-radius: 8px;
+        padding: 0.65rem 0.85rem;
+        font-size: 0.875rem;
+        color: var(--gray-900);
+        box-sizing: border-box;
+        outline: none;
+        background: #ffffff;
+        transition: border-color 0.2s, box-shadow 0.2s;
+      }
+      .modal-input:focus {
+        border-color: var(--pal-teal-dark);
+        box-shadow: 0 0 0 3px rgba(141, 188, 199, 0.2);
+      }
+      body.dark-mode .modal-input {
+        background: #16272d !important;
+        color: #ffffff !important;
+        border-color: #2c4851 !important;
+      }
+      body.dark-mode .modal-input:focus {
+        border-color: #42c7c7 !important;
+        box-shadow: 0 0 0 3px rgba(66, 199, 199, 0.15);
+      }
+
+      .modal-btn-cancel {
+        padding: 0.6rem 1.4rem;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 700;
+        background: var(--gray-100);
+        color: var(--gray-700);
+        border: 1px solid var(--gray-200);
+        cursor: pointer;
+        transition: background 0.15s, color 0.15s, transform 0.1s, box-shadow 0.15s;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .modal-btn-cancel:hover {
+        background: var(--gray-200);
+        color: var(--gray-900);
+      }
+      .modal-btn-cancel:active {
+        transform: translateY(1px);
+      }
+      body.dark-mode .modal-btn-cancel {
+        background: #26383f !important;
+        color: #ffffff !important;
+        border-color: #3a5159 !important;
+      }
+      body.dark-mode .modal-btn-cancel:hover {
+        background: #3a5159 !important;
+        border-color: #47626c !important;
+      }
+
+      .modal-btn-confirm {
+        padding: 0.6rem 1.4rem;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 700;
+        background: var(--pal-teal-dark);
+        color: #1e293b;
+        border: none;
+        cursor: pointer;
+        transition: background 0.15s, color 0.15s, transform 0.1s, box-shadow 0.15s;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .modal-btn-confirm:hover {
+        background: var(--pal-teal-mid);
+      }
+      .modal-btn-confirm:active {
+        transform: translateY(1px);
+      }
+      body.dark-mode .modal-btn-confirm {
+        background: #0b5360 !important;
+        color: #ffffff !important;
+      }
+      body.dark-mode .modal-btn-confirm:hover {
+        background: #005c66 !important;
+      }
+
+      /* Dark mode overrides for Archive Pagination & close */
+      body.dark-mode #archive-pagination {
+        background: #0a1418 !important;
+        border-top-color: #2c4851 !important;
+      }
+      body.dark-mode .archive-nav-btn,
+      body.dark-mode .archive-page-btn {
+        background: #16272d !important;
+        color: #ffffff !important;
+        border-color: #2c4851 !important;
+      }
+      body.dark-mode .archive-nav-btn:hover:not(:disabled),
+      body.dark-mode .archive-page-btn:hover:not(:disabled) {
+        background: #005c66 !important;
+        border-color: #005c66 !important;
+        color: #ffffff !important;
+      }
+      body.dark-mode .archive-page-btn.active {
+        background: #42c7c7 !important;
+        border-color: #42c7c7 !important;
+        color: #041014 !important;
+      }
+      body.dark-mode #archive-page-info {
+        color: #b4c5ca !important;
+      }
+      body.dark-mode .archive-modal__close {
+        background: #26383f !important;
+        color: #ffffff !important;
+      }
+      body.dark-mode .archive-modal__close:hover {
+        background: #3a5159 !important;
+      }
+
+      /* Dark mode overrides for Time Formula Modal */
+      body.dark-mode .formula-modal__panel {
+        background: rgba(18, 31, 36, 0.92) !important;
+        border-color: rgba(104, 144, 153, 0.48) !important;
+      }
+      body.dark-mode .formula-modal__title {
+        color: #ffffff !important;
+      }
+      body.dark-mode .formula-modal__panel p {
+        color: #b4c5ca !important;
+      }
+      body.dark-mode .formula-modal__panel p code {
+        background: #16272d !important;
+        color: #ffffff !important;
+      }
+      body.dark-mode .formula-modal__panel label,
+      body.dark-mode .formula-modal__panel span:not(.formula-modal__result) {
+        color: #83a0a8 !important;
+      }
+      body.dark-mode .formula-modal__input-wrap {
+        background: #16272d !important;
+        border-color: #2c4851 !important;
+      }
+      body.dark-mode .formula-modal__input-wrap:focus-within {
+        border-color: #42c7c7 !important;
+      }
+      body.dark-mode .formula-modal__input {
+        color: #ffffff !important;
+      }
+      body.dark-mode .formula-modal__panel div[style*="border-bottom"] {
+        border-bottom-color: #2c4851 !important;
+      }
+      body.dark-mode .formula-modal__result {
+        color: #42c7c7 !important;
+      }
+      body.dark-mode .formula-modal__result.is-empty {
+        color: #3a5159 !important;
+      }
+      body.dark-mode .formula-modal__btn-cancel {
+        background: #26383f !important;
+        color: #ffffff !important;
+      }
+      body.dark-mode .formula-modal__btn-cancel:hover {
+        background: #3a5159 !important;
+      }
+      body.dark-mode .formula-modal__btn-apply {
+        background: #0b5360 !important;
+        color: #ffffff !important;
+      }
+      body.dark-mode .formula-modal__btn-apply:hover {
+        background: #005c66 !important;
+      }
+      body.dark-mode .formula-modal__close {
+        background: #26383f !important;
+        color: #83a0a8 !important;
+      }
+      body.dark-mode .formula-modal__close:hover {
+        background: #3a5159 !important;
+        color: #ffffff !important;
       }
 
       /* ── Responsive Layout Classes ── */
@@ -827,8 +1051,8 @@
           </g>
         </svg>
         <div class="app-logo__divider">
-          <span class="app-logo__brand">Pioneer</span>
-          <span class="app-logo__product">Routing</span>
+          <span class="app-logo__brand">ROUTING</span>
+          <span class="app-logo__product">HEADQUARTERS</span>
         </div>
       </div>
 
@@ -1658,8 +1882,8 @@
        ============================================ -->
   <div id="exportModal" class="custom-modal modal-backdrop">
     <div class="custom-modal__panel">
-      <div id="exportModalIconWrap" style="margin-bottom:1rem; display:flex; justify-content:center;">
-        <div style="background:#f0fdf4; color:#16a34a; width:3rem; height:3rem; border-radius:50%; display:flex; align-items:center; justify-content:center;">
+      <div id="exportModalIconWrap" class="modal-icon-wrap" style="display:flex; justify-content:center;">
+        <div class="modal-icon-circle-success">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
             <polyline points="7 10 12 15 17 10"></polyline>
@@ -1667,19 +1891,17 @@
           </svg>
         </div>
       </div>
-      <h4 style="font-size:1rem; font-weight:700; color:#0f172a; margin:0 0 0.4rem; text-align:center;">Export Database</h4>
-      <p style="font-size:0.875rem; color:#475569; margin:0 0 1.25rem; line-height:1.55; text-align:center;">
+      <h4 class="modal-title" style="text-align:center;">Export Database</h4>
+      <p class="modal-message" style="text-align:center;">
         Are you sure you want to export the entire routing database to Excel? This file will contain all products and line activities.
       </p>
       <div class="modal-actions">
-        <button id="btn-export-cancel" onclick="hideExportModal()"
-                style="padding:0.5rem 1.2rem; border-radius:8px; font-size:0.875rem; font-weight:600; background:#f1f5f9; color:#374151; border:1px solid #e2e8f0; cursor:pointer;"
-                onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
+        <button id="btn-export-cancel" onclick="hideExportModal()" class="modal-btn-cancel">
           Cancel
         </button>
         <button id="btn-export-confirm" onclick="handleExportConfirm()"
-                style="padding:0.5rem 1.2rem; border-radius:8px; font-size:0.875rem; font-weight:600; background:#16a34a; color:#fff; border:none; cursor:pointer; display:inline-flex; align-items:center; gap:0.5rem;"
-                onmouseover="this.style.background='#15803d'" onmouseout="this.style.background='#16a34a'">
+                class="modal-btn-confirm"
+                style="background:#16a34a; color:#fff; display:inline-flex; align-items:center; gap:0.5rem;">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
                stroke="currentColor" stroke-width="2.2"
                stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
@@ -1698,23 +1920,17 @@
        ============================================ -->
   <div id="customModal" class="custom-modal modal-backdrop">
     <div class="custom-modal__panel">
-      <div id="modalIconWrap" style="margin-bottom:1rem;"></div>
-      <h4 id="modalTitle" style="font-size:1rem; font-weight:700; color:#0f172a; margin:0 0 0.4rem;"></h4>
-      <p id="modalMessage" style="font-size:0.875rem; color:#475569; margin:0 0 1.25rem; line-height:1.55;"></p>
+      <div id="modalIconWrap" class="modal-icon-wrap"></div>
+      <h4 id="modalTitle" class="modal-title"></h4>
+      <p id="modalMessage" class="modal-message"></p>
       <div id="modalInputWrap" style="display:none; margin-bottom:1rem;">
-        <input id="modalInput"
-               style="width:100%; border:1px solid #A4CCD9; border-radius:8px; padding:0.55rem 0.8rem; font-size:0.875rem; color:#0f172a; box-sizing:border-box; outline:none; background:#EBFFD8;"
-               onfocus="this.style.borderColor='#8DBCC7'" onblur="this.style.borderColor='#A4CCD9'">
+        <input id="modalInput" class="modal-input">
       </div>
       <div class="modal-actions">
-        <button id="modalCancelBtn"
-                style="padding:0.5rem 1.2rem; border-radius:8px; font-size:0.875rem; font-weight:600; background:#f1f5f9; color:#374151; border:1px solid #e2e8f0; cursor:pointer;"
-                onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
+        <button id="modalCancelBtn" class="modal-btn-cancel">
           Cancel
         </button>
-        <button id="modalConfirmBtn"
-                style="padding:0.5rem 1.2rem; border-radius:8px; font-size:0.875rem; font-weight:600; background:#8DBCC7; color:#1e293b; border:none; cursor:pointer;"
-                onmouseover="this.style.background='#A4CCD9'" onmouseout="this.style.background='#8DBCC7'">
+        <button id="modalConfirmBtn" class="modal-btn-confirm">
           Confirm
         </button>
       </div>
